@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from './supabase';
 import './WorkoutLogger.css';
 
 // ── Storage keys ────────────────────────────────────────────
@@ -98,14 +99,16 @@ function getExSessions(ex, workouts) {
 }
 
 // ── Component ────────────────────────────────────────────────
-function WorkoutLogger() {
+function WorkoutLogger({ userId }) {
+  const isGuest = !userId;
+
   const [view, setView] = useState('list'); // 'list'|'create'|'workout'
 
-  const [exercises, setExercises]         = useState(() => load(EXERCISES_KEY, DEFAULT_EXERCISES));
-  const [templates, setTemplates]         = useState(() => load(TEMPLATES_KEY, []));
-  const [workouts,  setWorkouts]          = useState(() => load(WORKOUTS_KEY,  []));
+  const [exercises,     setExercises]     = useState(() => isGuest ? load(EXERCISES_KEY, DEFAULT_EXERCISES) : []);
+  const [templates,     setTemplates]     = useState(() => isGuest ? load(TEMPLATES_KEY, []) : []);
+  const [workouts,      setWorkouts]      = useState(() => isGuest ? load(WORKOUTS_KEY,  []) : []);
   const [activeWorkout, setActiveWorkout] = useState(() => load(ACTIVE_KEY, null));
-  const [weightEntries]                   = useState(() => load(WEIGHT_KEY, []));
+  const [weightEntries, setWeightEntries] = useState(() => isGuest ? load(WEIGHT_KEY, []) : []);
 
   // History (expanded inline)
   const [selectedWorkout,   setSelectedWorkout]   = useState(null);
@@ -136,10 +139,54 @@ function WorkoutLogger() {
   const [editSetR,   setEditSetR]   = useState('');
   const [editSetBW,  setEditSetBW]  = useState(false);
 
-  // ── Persistence ────────────────────────────────────────────
-  function saveExercises(v) { setExercises(v); localStorage.setItem(EXERCISES_KEY, JSON.stringify(v)); }
-  function saveTemplates(v) { setTemplates(v); localStorage.setItem(TEMPLATES_KEY, JSON.stringify(v)); }
-  function saveWorkouts(v)  { setWorkouts(v);  localStorage.setItem(WORKOUTS_KEY,  JSON.stringify(v)); }
+  // ── Load from Supabase ──────────────────────────────────────
+  useEffect(() => {
+    if (isGuest) return;
+
+    Promise.all([
+      supabase.from('exercises').select('*'),
+      supabase.from('templates').select('*'),
+      supabase.from('workouts').select('*').order('date', { ascending: false }),
+      supabase.from('weight_entries').select('*').order('date_key'),
+    ]).then(([exRes, tmplRes, woRes, wRes]) => {
+      const exData = exRes.data ?? [];
+      if (exData.length === 0) {
+        supabase.from('exercises')
+          .insert(DEFAULT_EXERCISES.map(e => ({ user_id: userId, name: e.name, category: e.category })))
+          .select()
+          .then(({ data }) => {
+            if (data) setExercises(data.map(e => ({ id: e.id, name: e.name, category: e.category })));
+          });
+      } else {
+        setExercises(exData.map(e => ({ id: e.id, name: e.name, category: e.category })));
+      }
+
+      setTemplates((tmplRes.data ?? []).map(t => ({ id: t.id, name: t.name, exercises: t.exercises })));
+
+      setWorkouts((woRes.data ?? []).map(wo => ({
+        id: wo.id, name: wo.name, date: wo.date,
+        completedAt: wo.completed_at, exercises: wo.exercises,
+      })));
+
+      setWeightEntries((wRes.data ?? []).map(w => ({
+        id: w.id, dateKey: w.date_key, label: w.label, weight: w.weight,
+      })));
+    });
+  }, [userId, isGuest]);
+
+  // ── Persistence helpers ─────────────────────────────────────
+  function saveExercises(v) {
+    setExercises(v);
+    if (isGuest) localStorage.setItem(EXERCISES_KEY, JSON.stringify(v));
+  }
+  function saveTemplates(v) {
+    setTemplates(v);
+    if (isGuest) localStorage.setItem(TEMPLATES_KEY, JSON.stringify(v));
+  }
+  function saveWorkouts(v) {
+    setWorkouts(v);
+    if (isGuest) localStorage.setItem(WORKOUTS_KEY, JSON.stringify(v));
+  }
   function saveActive(v) {
     setActiveWorkout(v);
     if (v) localStorage.setItem(ACTIVE_KEY, JSON.stringify(v));
@@ -158,24 +205,46 @@ function WorkoutLogger() {
     setView('create');
   }
 
-  function handleSaveTemplate() {
+  async function handleSaveTemplate() {
     if (!draftName.trim() || draftExercises.length === 0) return;
-    if (editTmplId !== null) {
-      saveTemplates(templates.map(t =>
-        t.id === editTmplId ? { ...t, name: draftName.trim(), exercises: draftExercises } : t
-      ));
+
+    if (isGuest) {
+      if (editTmplId !== null) {
+        saveTemplates(templates.map(t =>
+          t.id === editTmplId ? { ...t, name: draftName.trim(), exercises: draftExercises } : t
+        ));
+      } else {
+        saveTemplates([...templates, {
+          id: `tmpl-${Date.now()}`,
+          name: draftName.trim(),
+          exercises: draftExercises,
+        }]);
+      }
     } else {
-      saveTemplates([...templates, {
-        id: `tmpl-${Date.now()}`,
-        name: draftName.trim(),
-        exercises: draftExercises,
-      }]);
+      if (editTmplId !== null) {
+        await supabase.from('templates')
+          .update({ name: draftName.trim(), exercises: draftExercises })
+          .eq('id', editTmplId);
+        setTemplates(prev => prev.map(t =>
+          t.id === editTmplId ? { ...t, name: draftName.trim(), exercises: draftExercises } : t
+        ));
+      } else {
+        const { data } = await supabase.from('templates')
+          .insert({ user_id: userId, name: draftName.trim(), exercises: draftExercises })
+          .select().single();
+        if (data) setTemplates(prev => [...prev, { id: data.id, name: data.name, exercises: data.exercises }]);
+      }
     }
     setEditTmplId(null); setView('list');
   }
 
-  function handleDeleteTemplate() {
-    saveTemplates(templates.filter(t => t.id !== editTmplId));
+  async function handleDeleteTemplate() {
+    if (isGuest) {
+      saveTemplates(templates.filter(t => t.id !== editTmplId));
+    } else {
+      await supabase.from('templates').delete().eq('id', editTmplId);
+      setTemplates(prev => prev.filter(t => t.id !== editTmplId));
+    }
     setEditTmplId(null); setView('list');
   }
 
@@ -200,12 +269,24 @@ function WorkoutLogger() {
     setShowPicker(false);
   }
 
-  function handleCreateNewExercise() {
+  async function handleCreateNewExercise() {
     const name = newExName.trim();
     if (!name) return;
-    const ex = { id: `custom-${Date.now()}`, name, category: newExCategory, custom: true };
-    saveExercises([...exercises, ex]);
-    handlePickerSelect(ex);
+
+    if (isGuest) {
+      const ex = { id: `custom-${Date.now()}`, name, category: newExCategory, custom: true };
+      saveExercises([...exercises, ex]);
+      handlePickerSelect(ex);
+    } else {
+      const { data } = await supabase.from('exercises')
+        .insert({ user_id: userId, name, category: newExCategory })
+        .select().single();
+      if (data) {
+        const ex = { id: data.id, name: data.name, category: data.category };
+        setExercises(prev => [...prev, ex]);
+        handlePickerSelect(ex);
+      }
+    }
     setNewExName(''); setShowNewExForm(false);
   }
 
@@ -228,15 +309,31 @@ function WorkoutLogger() {
     setView('workout');
   }
 
-  function handleFinishWorkout() {
-    saveWorkouts([{
-      id:          `workout-${Date.now()}`,
-      name:        activeWorkout.name,
-      templateId:  activeWorkout.templateId,
-      date:        new Date().toISOString().slice(0, 10),
-      completedAt: new Date().toISOString(),
-      exercises:   activeWorkout.exercises,
-    }, ...workouts]);
+  async function handleFinishWorkout() {
+    if (isGuest) {
+      saveWorkouts([{
+        id:          `workout-${Date.now()}`,
+        name:        activeWorkout.name,
+        templateId:  activeWorkout.templateId,
+        date:        new Date().toISOString().slice(0, 10),
+        completedAt: new Date().toISOString(),
+        exercises:   activeWorkout.exercises,
+      }, ...workouts]);
+    } else {
+      const { data } = await supabase.from('workouts').insert({
+        user_id:      userId,
+        name:         activeWorkout.name,
+        date:         new Date().toISOString().slice(0, 10),
+        completed_at: new Date().toISOString(),
+        exercises:    activeWorkout.exercises,
+      }).select().single();
+      if (data) {
+        setWorkouts(prev => [{
+          id: data.id, name: data.name, date: data.date,
+          completedAt: data.completed_at, exercises: data.exercises,
+        }, ...prev]);
+      }
+    }
     saveActive(null);
     setView('list');
   }
@@ -334,17 +431,27 @@ function WorkoutLogger() {
     setEditSetCtx(null);
   }
 
-  function commitHistoryEdit(exIdx, transformSets) {
-    const updated = workouts.map(wo =>
-      wo.id !== selectedWorkout.id ? wo : {
-        ...wo,
-        exercises: wo.exercises.map((ex, i) =>
-          i === exIdx ? { ...ex, sets: transformSets(ex.sets) } : ex
-        ),
-      }
-    );
-    saveWorkouts(updated);
-    setSelectedWorkout(updated.find(wo => wo.id === selectedWorkout.id));
+  async function commitHistoryEdit(exIdx, transformSets) {
+    if (isGuest) {
+      const updated = workouts.map(wo =>
+        wo.id !== selectedWorkout.id ? wo : {
+          ...wo,
+          exercises: wo.exercises.map((ex, i) =>
+            i === exIdx ? { ...ex, sets: transformSets(ex.sets) } : ex
+          ),
+        }
+      );
+      saveWorkouts(updated);
+      setSelectedWorkout(updated.find(wo => wo.id === selectedWorkout.id));
+    } else {
+      const updatedExercises = selectedWorkout.exercises.map((ex, i) =>
+        i === exIdx ? { ...ex, sets: transformSets(ex.sets) } : ex
+      );
+      await supabase.from('workouts').update({ exercises: updatedExercises }).eq('id', selectedWorkout.id);
+      const updatedWorkout = { ...selectedWorkout, exercises: updatedExercises };
+      setWorkouts(prev => prev.map(wo => wo.id === selectedWorkout.id ? updatedWorkout : wo));
+      setSelectedWorkout(updatedWorkout);
+    }
   }
 
   // ── Toggle history dropdown ────────────────────────────────
@@ -359,8 +466,13 @@ function WorkoutLogger() {
   }
 
   // ── Delete completed workout ───────────────────────────────
-  function handleDeleteWorkout() {
-    saveWorkouts(workouts.filter(wo => wo.id !== selectedWorkout.id));
+  async function handleDeleteWorkout() {
+    if (isGuest) {
+      saveWorkouts(workouts.filter(wo => wo.id !== selectedWorkout.id));
+    } else {
+      await supabase.from('workouts').delete().eq('id', selectedWorkout.id);
+      setWorkouts(prev => prev.filter(wo => wo.id !== selectedWorkout.id));
+    }
     setSelectedWorkout(null);
     setExpandedWorkoutId(null);
   }

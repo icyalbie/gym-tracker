@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { supabase } from './supabase';
 import './CalorieLogger.css';
 
 const STORAGE_KEY = 'gymtracker_calories';
@@ -61,8 +62,10 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-function CalorieLogger() {
-  const [meals, setMeals] = useState(() => load(STORAGE_KEY, []));
+function CalorieLogger({ userId }) {
+  const isGuest = !userId;
+
+  const [meals, setMeals] = useState(() => isGuest ? load(STORAGE_KEY, []) : []);
   const [range, setRange] = useState('7D');
 
   // Add modal
@@ -71,10 +74,14 @@ function CalorieLogger() {
   const [addName, setAddName] = useState('');
   const [addCals, setAddCals] = useState('');
 
-  function saveMeals(updated) {
-    setMeals(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  }
+  useEffect(() => {
+    if (isGuest) return;
+    supabase.from('calorie_meals').select('*').order('created_at').then(({ data }) => {
+      if (data) setMeals(data.map(m => ({
+        id: m.id, dateKey: m.date_key, name: m.name, calories: m.calories,
+      })));
+    });
+  }, [userId, isGuest]);
 
   function openAdd() {
     setAddDate(getTodayKey());
@@ -83,20 +90,35 @@ function CalorieLogger() {
     setShowAdd(true);
   }
 
-  function handleAddMeal() {
+  async function handleAddMeal() {
     const cals = parseInt(addCals, 10);
     if (!addName.trim() || isNaN(cals) || cals <= 0) return;
-    saveMeals([...meals, {
-      id:       `meal-${Date.now()}`,
-      dateKey:  addDate,
-      name:     addName.trim(),
-      calories: cals,
-    }]);
+
+    if (isGuest) {
+      const newMeal = { id: `meal-${Date.now()}`, dateKey: addDate, name: addName.trim(), calories: cals };
+      const updated = [...meals, newMeal];
+      setMeals(updated);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } else {
+      const { data } = await supabase
+        .from('calorie_meals')
+        .insert({ user_id: userId, date_key: addDate, name: addName.trim(), calories: cals })
+        .select()
+        .single();
+      if (data) setMeals(prev => [...prev, { id: data.id, dateKey: addDate, name: addName.trim(), calories: cals }]);
+    }
     setShowAdd(false);
   }
 
-  function handleDelete(id) {
-    saveMeals(meals.filter(m => m.id !== id));
+  async function handleDelete(id) {
+    if (isGuest) {
+      const updated = meals.filter(m => m.id !== id);
+      setMeals(updated);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } else {
+      await supabase.from('calorie_meals').delete().eq('id', id);
+      setMeals(prev => prev.filter(m => m.id !== id));
+    }
   }
 
   const todayKey   = getTodayKey();

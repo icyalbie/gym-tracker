@@ -3,6 +3,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer
 } from 'recharts';
+import { supabase } from './supabase';
 import './WeightLogger.css';
 
 const STORAGE_KEY = 'gymtracker_weight';
@@ -80,13 +81,13 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-function WeightLogger() {
+function WeightLogger({ userId }) {
+  const isGuest = !userId;
+
   const [entries, setEntries] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    } catch {
-      return [];
-    }
+    if (!isGuest) return [];
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
   });
 
   // Range selector + pan offset
@@ -103,8 +104,13 @@ function WeightLogger() {
   const [editWeight, setEditWeight] = useState('');
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-  }, [entries]);
+    if (isGuest) return;
+    supabase.from('weight_entries').select('*').order('date_key').then(({ data }) => {
+      if (data) setEntries(data.map(e => ({
+        id: e.id, dateKey: e.date_key, label: e.label, weight: e.weight,
+      })));
+    });
+  }, [userId, isGuest]);
 
   const todayKey = getTodayKey();
   const entryMap = Object.fromEntries(entries.map(e => [e.dateKey, e]));
@@ -132,14 +138,34 @@ function WeightLogger() {
     setShowAdd(true);
   }
 
-  function handleAddSave() {
+  async function handleAddSave() {
     const val = parseFloat(addWeight);
     if (isNaN(val) || val <= 0 || !addDate) return;
-    const newEntry = { dateKey: addDate, label: formatLabel(addDate), weight: val };
-    setEntries(prev =>
-      [...prev.filter(e => e.dateKey !== addDate), newEntry]
-        .sort((a, b) => a.dateKey.localeCompare(b.dateKey))
-    );
+    const lbl = formatLabel(addDate);
+
+    if (isGuest) {
+      const newEntry = { dateKey: addDate, label: lbl, weight: val };
+      const updated = [...entries.filter(e => e.dateKey !== addDate), newEntry]
+        .sort((a, b) => a.dateKey.localeCompare(b.dateKey));
+      setEntries(updated);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } else {
+      const { data } = await supabase
+        .from('weight_entries')
+        .upsert(
+          { user_id: userId, date_key: addDate, label: lbl, weight: val },
+          { onConflict: 'user_id,date_key' }
+        )
+        .select()
+        .single();
+      if (data) {
+        const mapped = { id: data.id, dateKey: data.date_key, label: data.label, weight: data.weight };
+        setEntries(prev =>
+          [...prev.filter(e => e.dateKey !== addDate), mapped]
+            .sort((a, b) => a.dateKey.localeCompare(b.dateKey))
+        );
+      }
+    }
     setShowAdd(false);
   }
 
@@ -151,14 +177,19 @@ function WeightLogger() {
     setEditWeight(String(entry.weight));
   }
 
-  function handleEditSave() {
+  async function handleEditSave() {
     const val = parseFloat(editWeight);
     if (isNaN(val) || val <= 0) return;
-    setEntries(prev => {
-      const updated = [...prev];
-      updated[editEntry.index] = { ...editEntry, weight: val };
-      return updated;
-    });
+    const updated = entries.map(e =>
+      e.dateKey === editEntry.dateKey ? { ...e, weight: val } : e
+    );
+    if (isGuest) {
+      setEntries(updated);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } else {
+      await supabase.from('weight_entries').update({ weight: val }).eq('id', editEntry.id);
+      setEntries(updated);
+    }
     setEditEntry(null);
   }
 

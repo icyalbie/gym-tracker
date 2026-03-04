@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar,
 } from 'recharts';
+import { supabase } from './supabase';
 import './Home.css';
 
 // ── Storage keys ─────────────────────────────────────────────
@@ -71,13 +72,38 @@ const CalTooltip = ({ active, payload }) => {
 };
 
 // ── Component ─────────────────────────────────────────────────
-function Home() {
+function Home({ userId }) {
+  const isGuest = !userId;
   const [expandedId, setExpandedId] = useState(null);
 
-  // Read fresh from localStorage each render — stays current when tab switches
-  const weightEntries = load(WEIGHT_KEY);
-  const calorieMeals  = load(CALORIES_KEY);
-  const workouts      = load(WORKOUTS_KEY);
+  // Auth mode: load from Supabase into state
+  const [sbWeightEntries, setSbWeightEntries] = useState([]);
+  const [sbCalorieMeals,  setSbCalorieMeals]  = useState([]);
+  const [sbWorkouts,      setSbWorkouts]      = useState([]);
+
+  useEffect(() => {
+    if (isGuest) return;
+    Promise.all([
+      supabase.from('weight_entries').select('*').order('date_key'),
+      supabase.from('calorie_meals').select('*'),
+      supabase.from('workouts').select('*').order('date', { ascending: false }),
+    ]).then(([wRes, cRes, woRes]) => {
+      setSbWeightEntries((wRes.data ?? []).map(e => ({
+        dateKey: e.date_key, label: e.label, weight: e.weight,
+      })));
+      setSbCalorieMeals((cRes.data ?? []).map(m => ({
+        id: m.id, dateKey: m.date_key, name: m.name, calories: m.calories,
+      })));
+      setSbWorkouts((woRes.data ?? []).map(wo => ({
+        id: wo.id, name: wo.name, date: wo.date, exercises: wo.exercises,
+      })));
+    });
+  }, [userId, isGuest]);
+
+  // Guest mode: read fresh from localStorage each render (stays current on tab switches)
+  const weightEntries = isGuest ? load(WEIGHT_KEY)   : sbWeightEntries;
+  const calorieMeals  = isGuest ? load(CALORIES_KEY) : sbCalorieMeals;
+  const workouts      = isGuest ? load(WORKOUTS_KEY) : sbWorkouts;
 
   const todayKey = getTodayKey();
 

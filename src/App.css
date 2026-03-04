@@ -26,6 +26,9 @@ body {
 .app-header {
   padding: 18px 20px 14px;
   border-bottom: 1px solid #2a2a2a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .app-header h1 {
@@ -34,6 +37,114 @@ body {
   letter-spacing: 1px;
   color: #ffffff;
   text-transform: uppercase;
+}
+
+.app-settings-btn {
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: color 0.15s;
+}
+
+.app-settings-btn:hover { color: #999; }
+
+/* ── App-level modals ─────────────────────────────────────── */
+.app-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.app-modal {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 480px;
+  padding: 28px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.app-modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #e0e0e0;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.app-modal-body {
+  font-size: 14px;
+  color: #888;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.app-modal-btn {
+  background: #e53935;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  width: 100%;
+}
+
+.app-modal-btn:hover:not(:disabled) { background: #ff5252; }
+.app-modal-btn:disabled { opacity: 0.4; cursor: default; }
+
+.app-modal-secondary-btn {
+  background: none;
+  border: 1px solid #333;
+  border-radius: 12px;
+  color: #888;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  width: 100%;
+  text-align: center;
+}
+
+.app-modal-secondary-btn:hover { border-color: #555; color: #aaa; }
+.app-modal-secondary-btn:disabled { opacity: 0.4; cursor: default; }
+
+.app-modal-danger-btn {
+  background: none;
+  border: none;
+  color: #e53935;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px;
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+}
+
+.app-modal-divider {
+  height: 1px;
+  background: #2a2a2a;
+}
+
+.app-modal-hint {
+  font-size: 12px;
+  color: #555;
+  text-align: center;
 }
 
 /* ── Main content ─────────────────────────────────────────── */

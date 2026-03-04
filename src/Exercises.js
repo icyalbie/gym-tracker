@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from './supabase';
 import './Exercises.css';
 
 const STORAGE_KEY  = 'gymtracker_exercises';
@@ -55,9 +56,39 @@ function formatExDate(dateStr) {
   return `${months[parseInt(m, 10) - 1]} ${parseInt(d, 10)}, '${year.slice(2)}`;
 }
 
-function Exercises() {
-  const [exercises, setExercises] = useState(() => loadJSON(STORAGE_KEY, DEFAULT_EXERCISES));
-  const [workouts]                = useState(() => loadJSON(WORKOUTS_KEY, []));
+function Exercises({ userId }) {
+  const isGuest = !userId;
+
+  const [exercises, setExercises] = useState(() =>
+    isGuest ? loadJSON(STORAGE_KEY, DEFAULT_EXERCISES) : []
+  );
+  const [workouts, setWorkouts] = useState(() =>
+    isGuest ? loadJSON(WORKOUTS_KEY, []) : []
+  );
+
+  useEffect(() => {
+    if (isGuest) return;
+
+    supabase.from('exercises').select('*').then(({ data }) => {
+      if (!data) return;
+      if (data.length === 0) {
+        supabase.from('exercises')
+          .insert(DEFAULT_EXERCISES.map(e => ({ user_id: userId, name: e.name, category: e.category })))
+          .select()
+          .then(({ data: seeded }) => {
+            if (seeded) setExercises(seeded.map(e => ({ id: e.id, name: e.name, category: e.category })));
+          });
+      } else {
+        setExercises(data.map(e => ({ id: e.id, name: e.name, category: e.category })));
+      }
+    });
+
+    supabase.from('workouts').select('*').order('date', { ascending: false }).then(({ data }) => {
+      if (data) setWorkouts(data.map(wo => ({
+        id: wo.id, name: wo.name, date: wo.date, exercises: wo.exercises,
+      })));
+    });
+  }, [userId, isGuest]);
 
   // Exercise detail sheet
   const [selected, setSelected] = useState(null);
@@ -73,19 +104,34 @@ function Exercises() {
 
   function saveExercises(updated) {
     setExercises(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    if (isGuest) localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   }
 
-  function handleDelete(id) {
-    saveExercises(exercises.filter(e => e.id !== id));
+  async function handleDelete(id) {
+    if (isGuest) {
+      saveExercises(exercises.filter(e => e.id !== id));
+    } else {
+      await supabase.from('exercises').delete().eq('id', id);
+      setExercises(prev => prev.filter(e => e.id !== id));
+    }
     setSelected(null);
   }
 
-  function handleAddSave() {
+  async function handleAddSave() {
     const name = newName.trim();
     if (!name) return;
-    const exercise = { id: `custom-${Date.now()}`, name, category: newCategory, custom: true };
-    saveExercises([...exercises, exercise]);
+
+    if (isGuest) {
+      const exercise = { id: `custom-${Date.now()}`, name, category: newCategory, custom: true };
+      saveExercises([...exercises, exercise]);
+    } else {
+      const { data } = await supabase
+        .from('exercises')
+        .insert({ user_id: userId, name, category: newCategory })
+        .select()
+        .single();
+      if (data) setExercises(prev => [...prev, { id: data.id, name: data.name, category: data.category }]);
+    }
     setNewName('');
     setNewCategory(CATEGORIES[0]);
     setShowAdd(false);
