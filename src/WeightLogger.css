@@ -1,0 +1,354 @@
+/* ── Layout ───────────────────────────────────────────────── */
+.weight-logger {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Page header ──────────────────────────────────────────── */
+.wl-header {
+  padding: 4px 0 0;
+}
+
+.wl-sub {
+  font-size: 13px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.wl-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.wl-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wl-current {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.change-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.change-badge.down {
+  background: rgba(46, 213, 115, 0.15);
+  color: #2ed573;
+}
+
+.change-badge.up {
+  background: rgba(229, 57, 53, 0.15);
+  color: #e53935;
+}
+
+/* ── Chart card ───────────────────────────────────────────── */
+.wl-chart-card {
+  background: #1e1e1e;
+  border-radius: 16px;
+  padding: 16px 16px 12px;
+  border: 1px solid #2a2a2a;
+}
+
+/* Row inside the card: range pills left, + button right */
+.wl-chart-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.wl-range-selector {
+  display: flex;
+  gap: 4px;
+}
+
+.wl-range-btn {
+  background: none;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #555;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 9px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  letter-spacing: 0.3px;
+}
+
+.wl-range-btn:hover {
+  color: #aaa;
+  border-color: #555;
+}
+
+.wl-range-btn.active {
+  background: #e53935;
+  border-color: #e53935;
+  color: #ffffff;
+}
+
+/* Period navigation row */
+.wl-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.wl-nav-arrow {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 22px;
+  line-height: 1;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: color 0.15s;
+  user-select: none;
+}
+
+.wl-nav-arrow:hover:not(:disabled) {
+  color: #ccc;
+}
+
+.wl-nav-arrow:disabled {
+  color: #333;
+  cursor: default;
+}
+
+.wl-nav-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #aaa;
+  letter-spacing: 0.2px;
+}
+
+.wl-add-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e53935;
+  color: #ffffff;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  padding: 0;
+  padding-bottom: 1px; /* optical centering of + */
+}
+
+.wl-add-btn:hover {
+  background: #ff5252;
+  transform: scale(1.08);
+}
+
+.wl-empty-chart {
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  font-size: 14px;
+  text-align: center;
+  padding: 0 20px;
+}
+
+.wl-empty-chart strong {
+  color: #888;
+}
+
+.wl-chart-hint {
+  font-size: 11px;
+  color: #444;
+  text-align: center;
+  margin-top: 10px;
+  letter-spacing: 0.2px;
+}
+
+/* ── Tooltip ──────────────────────────────────────────────── */
+.wl-tooltip {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.wl-tooltip-date {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 2px;
+}
+
+.wl-tooltip-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* ── Modal shared ─────────────────────────────────────────── */
+.wl-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+
+.wl-modal {
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 20px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.wl-modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #ffffff;
+  text-align: center;
+  margin-bottom: -4px;
+}
+
+/* ── Field (label + input) ────────────────────────────────── */
+.wl-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wl-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Date input */
+.wl-date-input {
+  background: #141414;
+  border: 1px solid #333;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+  /* style the calendar picker icon to match theme */
+  color-scheme: dark;
+}
+
+.wl-date-input:focus {
+  border-color: #e53935;
+}
+
+/* Weight input row */
+.wl-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wl-input {
+  flex: 1;
+  width: 100%;
+  background: #141414;
+  border: 1px solid #333;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 700;
+  padding: 12px 16px;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s;
+  -moz-appearance: textfield;
+}
+
+.wl-input::-webkit-outer-spin-button,
+.wl-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.wl-input:focus {
+  border-color: #e53935;
+}
+
+.wl-unit {
+  font-size: 18px;
+  color: #555;
+  font-weight: 600;
+  min-width: 30px;
+}
+
+/* ── Modal action buttons ─────────────────────────────────── */
+.wl-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.wl-cancel-btn {
+  flex: 1;
+  background: #2a2a2a;
+  color: #aaa;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.wl-cancel-btn:hover {
+  background: #333;
+}
+
+.wl-save-btn {
+  flex: 1;
+  background: #e53935;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.wl-save-btn:hover:not(:disabled) {
+  background: #ff5252;
+}
+
+.wl-save-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}

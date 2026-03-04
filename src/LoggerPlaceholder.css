@@ -1,0 +1,25 @@
+.logger-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  gap: 12px;
+  color: #888;
+}
+
+.logger-icon {
+  font-size: 56px;
+}
+
+.logger-placeholder h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #e0e0e0;
+}
+
+.logger-placeholder p {
+  font-size: 15px;
+  color: #666;
+}

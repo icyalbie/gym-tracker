@@ -1,0 +1,461 @@
+/* ── Layout ───────────────────────────────────────────────── */
+.exercises-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Page header ──────────────────────────────────────────── */
+.ex-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 4px 0 0;
+}
+
+.ex-sub {
+  font-size: 13px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.ex-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.ex-add-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e53935;
+  color: #ffffff;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  padding: 0;
+  padding-bottom: 1px;
+  flex-shrink: 0;
+  margin-bottom: 2px;
+}
+
+.ex-add-btn:hover {
+  background: #ff5252;
+  transform: scale(1.08);
+}
+
+/* ── Category section ─────────────────────────────────────── */
+.ex-category {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ex-category-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 0 2px;
+}
+
+/* ── Exercise list ────────────────────────────────────────── */
+.ex-list {
+  background: #1e1e1e;
+  border-radius: 14px;
+  border: 1px solid #2a2a2a;
+  overflow: hidden;
+}
+
+.ex-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #252525;
+  padding: 15px 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+  color: inherit;
+}
+
+.ex-row:last-child {
+  border-bottom: none;
+}
+
+.ex-row:hover {
+  background: #252525;
+}
+
+.ex-row[draggable="true"] {
+  cursor: grab;
+}
+
+.ex-row.ex-dragging {
+  opacity: 0.35;
+}
+
+.ex-row.ex-drag-over {
+  border-top: 2px solid rgba(229, 57, 53, 0.6);
+  background: rgba(229, 57, 53, 0.04);
+}
+
+.ex-row-name {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 500;
+  color: #e0e0e0;
+}
+
+.ex-custom-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #e53935;
+  background: rgba(229, 57, 53, 0.12);
+  border: 1px solid rgba(229, 57, 53, 0.25);
+  border-radius: 4px;
+  padding: 2px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.ex-row-chevron {
+  font-size: 18px;
+  color: #444;
+  line-height: 1;
+}
+
+.ex-empty {
+  font-size: 13px;
+  color: #444;
+  padding: 16px;
+  text-align: center;
+}
+
+/* ── Overlay (shared) ─────────────────────────────────────── */
+.ex-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+
+/* ── Exercise detail modal (centred) ──────────────────────── */
+.ex-sheet {
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 20px;
+  padding: 24px 20px;
+  width: 100%;
+  max-width: 380px;
+  max-height: 85vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ex-sheet-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.ex-sheet-category {
+  font-size: 12px;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.ex-sheet-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.ex-sheet-close {
+  background: #2a2a2a;
+  border: none;
+  color: #888;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: background 0.15s;
+}
+
+.ex-sheet-close:hover {
+  background: #333;
+}
+
+/* ── Stats grid ───────────────────────────────────────────── */
+.ex-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ex-stat-card {
+  background: #242424;
+  border: 1px solid #2a2a2a;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ex-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ex-stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.ex-stat-unit {
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  margin-left: 3px;
+}
+
+.ex-stat-hint {
+  font-size: 11px;
+  color: #444;
+  margin-top: 2px;
+}
+
+/* ── Exercise history ─────────────────────────────────────── */
+.ex-history-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ex-history-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 0 2px;
+}
+
+.ex-history-list {
+  background: #242424;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ex-history-row {
+  padding: 10px 14px;
+  border-bottom: 1px solid #2e2e2e;
+}
+
+.ex-history-row:last-child {
+  border-bottom: none;
+}
+
+.ex-history-row-date {
+  font-size: 11px;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 7px;
+}
+
+.ex-history-row-sets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.ex-history-chip {
+  background: #2a2a2a;
+  border: 1px solid #333;
+  border-radius: 5px;
+  color: #aaa;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 7px;
+  white-space: nowrap;
+}
+
+.ex-sheet-note {
+  font-size: 12px;
+  color: #444;
+  text-align: center;
+  padding: 0 8px;
+  line-height: 1.5;
+}
+
+.ex-delete-btn {
+  width: 100%;
+  background: rgba(229, 57, 53, 0.1);
+  color: #e53935;
+  border: 1px solid rgba(229, 57, 53, 0.25);
+  border-radius: 12px;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ex-delete-btn:hover {
+  background: rgba(229, 57, 53, 0.2);
+  border-color: rgba(229, 57, 53, 0.5);
+}
+
+/* ── Add exercise modal ───────────────────────────────────── */
+.ex-modal {
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 20px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ex-modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #ffffff;
+  text-align: center;
+}
+
+/* ── Form fields ──────────────────────────────────────────── */
+.ex-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ex-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ex-text-input {
+  background: #141414;
+  border: 1px solid #333;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 16px;
+  padding: 13px 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+
+.ex-text-input::placeholder {
+  color: #444;
+}
+
+.ex-text-input:focus {
+  border-color: #e53935;
+}
+
+.ex-select {
+  background: #141414;
+  border: 1px solid #333;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 16px;
+  padding: 13px 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+  cursor: pointer;
+  color-scheme: dark;
+}
+
+.ex-select:focus {
+  border-color: #e53935;
+}
+
+/* ── Modal action buttons ─────────────────────────────────── */
+.ex-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.ex-cancel-btn {
+  flex: 1;
+  background: #2a2a2a;
+  color: #aaa;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ex-cancel-btn:hover {
+  background: #333;
+}
+
+.ex-save-btn {
+  flex: 1;
+  background: #e53935;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.ex-save-btn:hover:not(:disabled) {
+  background: #ff5252;
+}
+
+.ex-save-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}

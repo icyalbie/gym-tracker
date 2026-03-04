@@ -1,0 +1,379 @@
+/* ── Page shell ───────────────────────────────────────────── */
+.cl-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Page header ──────────────────────────────────────────── */
+.cl-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 4px 0 0;
+}
+
+.cl-sub {
+  font-size: 13px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.cl-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.cl-title-unit {
+  font-size: 16px;
+  font-weight: 400;
+  color: #888;
+}
+
+.cl-add-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e53935;
+  color: #ffffff;
+  border: none;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  padding: 0;
+  padding-bottom: 1px;
+  flex-shrink: 0;
+  margin-bottom: 2px;
+}
+
+.cl-add-btn:hover {
+  background: #ff5252;
+  transform: scale(1.08);
+}
+
+/* ── Chart card ───────────────────────────────────────────── */
+.cl-chart-card {
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  padding: 16px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Range selector ───────────────────────────────────────── */
+.cl-range-selector {
+  display: flex;
+  gap: 6px;
+}
+
+.cl-range-btn {
+  background: none;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #666;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.cl-range-btn:hover {
+  color: #aaa;
+  border-color: #555;
+}
+
+.cl-range-btn.active {
+  background: #e53935;
+  border-color: #e53935;
+  color: #ffffff;
+}
+
+/* ── Empty chart state ────────────────────────────────────── */
+.cl-empty-chart {
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #444;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.cl-empty-chart strong {
+  color: #666;
+}
+
+/* ── Tooltip ──────────────────────────────────────────────── */
+.cl-tooltip {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.cl-tooltip-date {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 2px;
+}
+
+.cl-tooltip-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* ── Sections ─────────────────────────────────────────────── */
+.cl-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cl-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 0 2px;
+}
+
+.cl-empty-text {
+  font-size: 14px;
+  color: #444;
+  padding: 4px 2px;
+}
+
+/* ── Meal list ────────────────────────────────────────────── */
+.cl-meal-list {
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.cl-meal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 14px;
+  border-bottom: 1px solid #252525;
+  gap: 10px;
+}
+
+.cl-meal-info {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
+  min-width: 0;
+  gap: 12px;
+}
+
+.cl-meal-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #e0e0e0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cl-meal-cals {
+  font-size: 13px;
+  font-weight: 600;
+  color: #888;
+  flex-shrink: 0;
+}
+
+.cl-meal-delete {
+  background: none;
+  border: none;
+  color: #444;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+
+.cl-meal-delete:hover {
+  color: #e53935;
+}
+
+/* ── Total row ────────────────────────────────────────────── */
+.cl-meal-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 14px;
+  background: #181818;
+}
+
+.cl-meal-total-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cl-meal-total-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e0e0e0;
+}
+
+/* ── Overlay ──────────────────────────────────────────────── */
+.cl-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+
+/* ── Modal ────────────────────────────────────────────────── */
+.cl-modal {
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 20px;
+  padding: 24px 20px 20px;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cl-modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #ffffff;
+  text-align: center;
+}
+
+/* ── Form fields ──────────────────────────────────────────── */
+.cl-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.cl-field-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cl-date-input,
+.cl-text-input {
+  background: #141414;
+  border: 1px solid #333;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 15px;
+  padding: 12px 13px;
+  outline: none;
+  transition: border-color 0.2s;
+  color-scheme: dark;
+  width: 100%;
+}
+
+.cl-date-input::placeholder,
+.cl-text-input::placeholder { color: #444; }
+
+.cl-date-input:focus,
+.cl-text-input:focus { border-color: #e53935; }
+
+.cl-input-row {
+  display: flex;
+  align-items: center;
+  background: #141414;
+  border: 1px solid #333;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.cl-input-row:focus-within {
+  border-color: #e53935;
+}
+
+.cl-input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 15px;
+  padding: 12px 13px;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.cl-input::-webkit-outer-spin-button,
+.cl-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.cl-unit-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  padding: 0 13px 0 0;
+  white-space: nowrap;
+}
+
+/* ── Modal actions ────────────────────────────────────────── */
+.cl-modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.cl-cancel-btn {
+  flex: 1;
+  background: #2a2a2a;
+  color: #aaa;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 13px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cl-cancel-btn:hover { background: #333; }
+
+.cl-save-btn {
+  flex: 1;
+  background: #e53935;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 13px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.cl-save-btn:hover:not(:disabled) { background: #ff5252; }
+.cl-save-btn:disabled { opacity: 0.3; cursor: default; }
