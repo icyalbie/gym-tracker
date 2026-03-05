@@ -16,8 +16,12 @@ function load(key) {
   catch { return []; }
 }
 
+function localDateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function getTodayKey() {
-  return new Date().toISOString().slice(0, 10);
+  return localDateKey(new Date());
 }
 
 function formatDate(dateStr) {
@@ -31,7 +35,7 @@ function getLastNDays(n) {
   for (let i = n - 1; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    keys.push(d.toISOString().slice(0, 10));
+    keys.push(localDateKey(d));
   }
   return keys;
 }

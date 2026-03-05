@@ -23,7 +23,8 @@ const RANGE_SUBTITLES = {
 };
 
 function getTodayKey() {
-  return new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 function formatLabel(dateKey) {
@@ -35,14 +36,18 @@ function formatLabel(dateKey) {
 
 // Returns the inclusive [startKey, endKey] for a given range and offset
 // offset=0 → current window, offset=1 → one window back, etc.
+function localDateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function getWindow(rangeDays, offset) {
   const endDate = new Date();
   endDate.setDate(endDate.getDate() - offset * rangeDays);
-  const endKey = endDate.toISOString().slice(0, 10);
+  const endKey = localDateKey(endDate);
 
   const startDate = new Date(endDate);
   startDate.setDate(startDate.getDate() - (rangeDays - 1));
-  const startKey = startDate.toISOString().slice(0, 10);
+  const startKey = localDateKey(startDate);
 
   return { startKey, endKey };
 }
@@ -251,7 +256,7 @@ function WeightLogger({ userId }) {
         ) : (
           <>
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={chartData} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
+              <LineChart data={chartData} margin={{ top: 10, right: 40, left: -20, bottom: 0 }}>
                 <CartesianGrid stroke="#2a2a2a" strokeDasharray="3 3" vertical={false} />
                 <XAxis
                   dataKey="label"

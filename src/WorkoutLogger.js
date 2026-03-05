@@ -63,6 +63,10 @@ function load(key, fallback) {
   catch { return fallback; }
 }
 
+function localDateKey(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function formatDate(dateStr) {
   const [, m, d] = dateStr.split('-');
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -315,7 +319,7 @@ function WorkoutLogger({ userId }) {
         id:          `workout-${Date.now()}`,
         name:        activeWorkout.name,
         templateId:  activeWorkout.templateId,
-        date:        new Date().toISOString().slice(0, 10),
+        date:        localDateKey(),
         completedAt: new Date().toISOString(),
         exercises:   activeWorkout.exercises,
       }, ...workouts]);
@@ -323,7 +327,7 @@ function WorkoutLogger({ userId }) {
       const { data } = await supabase.from('workouts').insert({
         user_id:      userId,
         name:         activeWorkout.name,
-        date:         new Date().toISOString().slice(0, 10),
+        date:         localDateKey(),
         completed_at: new Date().toISOString(),
         exercises:    activeWorkout.exercises,
       }).select().single();
@@ -354,9 +358,7 @@ function WorkoutLogger({ userId }) {
 
     let finalWeight = w;
     if (addSetBW) {
-      const workoutDate = source === 'active'
-        ? new Date().toISOString().slice(0, 10)
-        : selectedWorkout.date;
+      const workoutDate = source === 'active' ? localDateKey() : selectedWorkout.date;
       const bw = getBodyweightForDate(workoutDate, weightEntries);
       if (bw !== null) finalWeight = Math.round((w + bw) * 100) / 100;
     }
@@ -393,9 +395,7 @@ function WorkoutLogger({ userId }) {
 
     let finalWeight = w;
     if (editSetBW) {
-      const workoutDate = source === 'active'
-        ? new Date().toISOString().slice(0, 10)
-        : selectedWorkout.date;
+      const workoutDate = source === 'active' ? localDateKey() : selectedWorkout.date;
       const bw = getBodyweightForDate(workoutDate, weightEntries);
       if (bw !== null) finalWeight = Math.round((w + bw) * 100) / 100;
     }
@@ -513,15 +513,11 @@ function WorkoutLogger({ userId }) {
 
   // ── Workout date for each modal context ────────────────────
   const addSetWorkoutDate = addSetModal
-    ? (addSetModal.source === 'active'
-        ? new Date().toISOString().slice(0, 10)
-        : selectedWorkout?.date)
+    ? (addSetModal.source === 'active' ? localDateKey() : selectedWorkout?.date)
     : null;
 
   const editSetWorkoutDate = editSetCtx
-    ? (editSetCtx.source === 'active'
-        ? new Date().toISOString().slice(0, 10)
-        : selectedWorkout?.date)
+    ? (editSetCtx.source === 'active' ? localDateKey() : selectedWorkout?.date)
     : null;
 
   // ── Shared modal props helpers ─────────────────────────────
