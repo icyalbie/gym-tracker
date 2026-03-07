@@ -117,7 +117,14 @@ function WeightLogger({ userId }) {
     });
   }, [userId, isGuest]);
 
-  const todayKey = getTodayKey();
+  const [todayKey, setTodayKey] = useState(getTodayKey);
+  useEffect(() => {
+    const tick = setInterval(() => {
+      const key = getTodayKey();
+      setTodayKey(prev => prev !== key ? key : prev);
+    }, 60_000);
+    return () => clearInterval(tick);
+  }, []);
   const entryMap = Object.fromEntries(entries.map(e => [e.dateKey, e]));
 
   const rangeDays            = RANGES.find(r => r.key === range).days;
