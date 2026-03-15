@@ -2,7 +2,7 @@
 .exercises-page {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 /* ── Page header ──────────────────────────────────────────── */
@@ -14,26 +14,30 @@
 }
 
 .ex-sub {
-  font-size: 13px;
-  color: #666;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
 }
 
 .ex-title {
-  font-size: 26px;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: 0.5px;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  line-height: 1;
 }
 
 .ex-add-btn {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: #e53935;
-  color: #ffffff;
+  background: var(--accent);
+  color: #0a0a0a;
   border: none;
   font-size: 24px;
   line-height: 1;
@@ -41,39 +45,134 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
+  transition: background var(--transition), transform 0.1s, box-shadow var(--transition);
   padding: 0;
   padding-bottom: 1px;
   flex-shrink: 0;
   margin-bottom: 2px;
+  box-shadow: 0 4px 16px rgba(230, 57, 70, 0.4);
 }
 
 .ex-add-btn:hover {
-  background: #ff5252;
+  background: var(--accent-hover);
   transform: scale(1.08);
 }
 
-/* ── Category section ─────────────────────────────────────── */
-.ex-category {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* ── Category card ────────────────────────────────────────── */
+.ex-category-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
 }
 
-.ex-category-label {
-  font-size: 11px;
+.ex-category-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 18px 16px;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  transition: background var(--transition);
+}
+
+.ex-category-header:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ex-category-chevron {
+  font-size: 20px;
+  color: var(--text-hint);
+  line-height: 1;
+  transition: transform 0.2s ease;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.ex-category-chevron.open {
+  transform: rotate(90deg);
+}
+
+.ex-category-name {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 16px;
   font-weight: 700;
-  color: #555;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  padding: 0 2px;
+  color: var(--text-primary);
+  letter-spacing: -0.1px;
+}
+
+.ex-category-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-pill);
+  padding: 3px 11px;
+  flex-shrink: 0;
+}
+
+.ex-category-body {
+  border-top: 1px solid var(--border-default);
+}
+
+.ex-category-empty {
+  font-size: 13px;
+  color: var(--text-hint);
+  padding: 16px;
+  text-align: center;
+}
+
+.ex-delete-category-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 13px 16px;
+  cursor: pointer;
+  text-align: center;
+  transition: color var(--transition), background var(--transition);
+}
+
+.ex-delete-category-btn:hover {
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.ex-add-category-btn {
+  background: var(--bg-surface);
+  border: 1.5px dashed var(--border-input);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 16px;
+  cursor: pointer;
+  width: 100%;
+  transition: border-color var(--transition), color var(--transition), background var(--transition);
+  text-align: center;
+}
+
+.ex-add-category-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
 }
 
 /* ── Exercise list ────────────────────────────────────────── */
 .ex-list {
-  background: #1e1e1e;
-  border-radius: 14px;
-  border: 1px solid #2a2a2a;
+  background: var(--bg-surface);
   overflow: hidden;
 }
 
@@ -82,13 +181,13 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  background: none;
+  background: var(--bg-elevated);
   border: none;
-  border-bottom: 1px solid #252525;
+  border-bottom: 1px solid var(--border-subtle);
   padding: 15px 16px;
   cursor: pointer;
   text-align: left;
-  transition: background 0.12s;
+  transition: background var(--transition);
   color: inherit;
 }
 
@@ -97,7 +196,7 @@
 }
 
 .ex-row:hover {
-  background: #252525;
+  background: #222222;
 }
 
 .ex-row[draggable="true"] {
@@ -109,47 +208,40 @@
 }
 
 .ex-row.ex-drag-over {
-  border-top: 2px solid rgba(229, 57, 53, 0.6);
-  background: rgba(229, 57, 53, 0.04);
+  border-top: 2px solid rgba(249, 115, 22, 0.5);
+  background: var(--accent-dim);
 }
 
 .ex-row-name {
   flex: 1;
   font-size: 15px;
   font-weight: 500;
-  color: #e0e0e0;
+  color: var(--text-secondary);
 }
 
 .ex-custom-badge {
   font-size: 10px;
   font-weight: 700;
-  color: #e53935;
-  background: rgba(229, 57, 53, 0.12);
-  border: 1px solid rgba(229, 57, 53, 0.25);
-  border-radius: 4px;
-  padding: 2px 6px;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid rgba(249, 115, 22, 0.25);
+  border-radius: 6px;
+  padding: 2px 7px;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
 }
 
 .ex-row-chevron {
   font-size: 18px;
-  color: #444;
+  color: var(--text-hint);
   line-height: 1;
-}
-
-.ex-empty {
-  font-size: 13px;
-  color: #444;
-  padding: 16px;
-  text-align: center;
 }
 
 /* ── Overlay (shared) ─────────────────────────────────────── */
 .ex-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -159,9 +251,9 @@
 
 /* ── Exercise detail modal (centred) ──────────────────────── */
 .ex-sheet {
-  background: #1e1e1e;
-  border: 1px solid #2a2a2a;
-  border-radius: 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
   padding: 24px 20px;
   width: 100%;
   max-width: 380px;
@@ -170,6 +262,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  box-shadow: var(--shadow-modal);
 }
 
 .ex-sheet-header {
@@ -179,23 +272,26 @@
 }
 
 .ex-sheet-category {
-  font-size: 12px;
-  color: #555;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.2px;
   margin-bottom: 4px;
 }
 
 .ex-sheet-name {
-  font-size: 22px;
-  font-weight: 700;
-  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
 }
 
 .ex-sheet-close {
-  background: #2a2a2a;
+  background: var(--bg-elevated);
   border: none;
-  color: #888;
+  color: var(--text-muted);
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -206,11 +302,11 @@
   cursor: pointer;
   flex-shrink: 0;
   margin-top: 2px;
-  transition: background 0.15s;
+  transition: background var(--transition);
 }
 
 .ex-sheet-close:hover {
-  background: #333;
+  background: #2a2a2a;
 }
 
 /* ── Stats grid ───────────────────────────────────────────── */
@@ -221,9 +317,9 @@
 }
 
 .ex-stat-card {
-  background: #242424;
-  border: 1px solid #2a2a2a;
-  border-radius: 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -231,30 +327,32 @@
 }
 
 .ex-stat-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  color: #555;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.2px;
 }
 
 .ex-stat-value {
-  font-size: 32px;
-  font-weight: 700;
-  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 900;
+  color: var(--text-primary);
   line-height: 1.1;
+  letter-spacing: 0.5px;
 }
 
 .ex-stat-unit {
   font-size: 14px;
   font-weight: 600;
-  color: #555;
+  color: var(--text-muted);
   margin-left: 3px;
 }
 
 .ex-stat-hint {
   font-size: 11px;
-  color: #444;
+  color: var(--text-hint);
   margin-top: 2px;
 }
 
@@ -268,22 +366,22 @@
 .ex-history-label {
   font-size: 11px;
   font-weight: 700;
-  color: #555;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 1.5px;
   padding: 0 2px;
 }
 
 .ex-history-list {
-  background: #242424;
-  border: 1px solid #2a2a2a;
-  border-radius: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
 .ex-history-row {
-  padding: 10px 14px;
-  border-bottom: 1px solid #2e2e2e;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .ex-history-row:last-child {
@@ -292,74 +390,78 @@
 
 .ex-history-row-date {
   font-size: 11px;
-  font-weight: 600;
-  color: #555;
+  font-weight: 700;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
   margin-bottom: 7px;
 }
 
 .ex-history-row-sets {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 5px;
 }
 
 .ex-history-chip {
-  background: #2a2a2a;
-  border: 1px solid #333;
-  border-radius: 5px;
-  color: #aaa;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
   font-size: 11px;
   font-weight: 600;
-  padding: 3px 7px;
+  padding: 3px 8px;
   white-space: nowrap;
 }
 
 .ex-sheet-note {
   font-size: 12px;
-  color: #444;
+  color: var(--text-hint);
   text-align: center;
   padding: 0 8px;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .ex-delete-btn {
   width: 100%;
-  background: rgba(229, 57, 53, 0.1);
-  color: #e53935;
-  border: 1px solid rgba(229, 57, 53, 0.25);
-  border-radius: 12px;
-  padding: 13px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid rgba(249, 115, 22, 0.25);
+  border-radius: var(--radius-pill);
+  padding: 14px;
+  font-family: var(--font-body);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background var(--transition), border-color var(--transition);
 }
 
 .ex-delete-btn:hover {
-  background: rgba(229, 57, 53, 0.2);
-  border-color: rgba(229, 57, 53, 0.5);
+  background: var(--accent-dim-hover);
+  border-color: rgba(249, 115, 22, 0.5);
 }
 
 /* ── Add exercise modal ───────────────────────────────────── */
 .ex-modal {
-  background: #1e1e1e;
-  border: 1px solid #2a2a2a;
-  border-radius: 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
   padding: 28px 24px;
   width: 100%;
   max-width: 340px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  box-shadow: var(--shadow-modal);
 }
 
 .ex-modal-title {
-  font-size: 17px;
+  font-family: var(--font-display);
+  font-size: 20px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
   text-align: center;
+  letter-spacing: -0.2px;
 }
 
 /* ── Form fields ──────────────────────────────────────────── */
@@ -370,49 +472,51 @@
 }
 
 .ex-field-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.2px;
 }
 
 .ex-text-input {
-  background: #141414;
-  border: 1px solid #333;
-  border-radius: 10px;
-  color: #ffffff;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-body);
   font-size: 16px;
   padding: 13px 14px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color var(--transition);
   width: 100%;
 }
 
 .ex-text-input::placeholder {
-  color: #444;
+  color: var(--text-hint);
 }
 
 .ex-text-input:focus {
-  border-color: #e53935;
+  border-color: var(--accent);
 }
 
 .ex-select {
-  background: #141414;
-  border: 1px solid #333;
-  border-radius: 10px;
-  color: #ffffff;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-body);
   font-size: 16px;
   padding: 13px 14px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color var(--transition);
   width: 100%;
   cursor: pointer;
   color-scheme: dark;
 }
 
 .ex-select:focus {
-  border-color: #e53935;
+  border-color: var(--accent);
 }
 
 /* ── Modal action buttons ─────────────────────────────────── */
@@ -423,36 +527,39 @@
 
 .ex-cancel-btn {
   flex: 1;
-  background: #2a2a2a;
-  color: #aaa;
-  border: 1px solid #333;
-  border-radius: 12px;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-pill);
   padding: 14px;
+  font-family: var(--font-body);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background var(--transition);
 }
 
 .ex-cancel-btn:hover {
-  background: #333;
+  background: #252525;
 }
 
 .ex-save-btn {
   flex: 1;
-  background: #e53935;
+  background: var(--accent);
   color: #ffffff;
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-pill);
   padding: 14px;
+  font-family: var(--font-body);
   font-size: 15px;
   font-weight: 700;
+  letter-spacing: 0.3px;
   cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
+  transition: background var(--transition), opacity var(--transition);
 }
 
 .ex-save-btn:hover:not(:disabled) {
-  background: #ff5252;
+  background: var(--accent-hover);
 }
 
 .ex-save-btn:disabled {

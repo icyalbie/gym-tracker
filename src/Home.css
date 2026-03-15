@@ -11,86 +11,96 @@
 }
 
 .greeting-sub {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 6px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.5px;
 }
 
 .greeting-title {
-  font-size: 26px;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: 0.5px;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  line-height: 1;
 }
 
 /* ── Chart cards ──────────────────────────────────────────── */
 .chart-card {
-  background: #1e1e1e;
-  border-radius: 16px;
-  padding: 18px 18px 14px;
-  border: 1px solid #2a2a2a;
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  padding: 20px 18px 16px;
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-card);
 }
 
 .chart-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .chart-label {
-  font-size: 12px;
-  color: #666;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.5px;
   margin-bottom: 4px;
 }
 
 .chart-value {
-  font-size: 30px;
-  font-weight: 700;
-  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--text-primary);
   line-height: 1;
+  letter-spacing: 1px;
 }
 
 .chart-unit {
-  font-size: 16px;
+  font-family: var(--font-body);
+  font-size: 18px;
   font-weight: 400;
-  color: #888;
+  color: var(--text-muted);
 }
 
 .chart-no-data {
   font-size: 22px;
-  color: #444;
+  color: var(--text-hint);
 }
 
 .change-badge {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   padding: 4px 10px;
-  border-radius: 20px;
+  border-radius: var(--radius-pill);
   margin-top: 4px;
   flex-shrink: 0;
+  letter-spacing: 0.3px;
 }
 
 .change-badge.down {
-  background: rgba(46, 213, 115, 0.15);
-  color: #2ed573;
+  background: var(--success-dim);
+  color: var(--success);
 }
 
 .change-badge.up {
-  background: rgba(229, 57, 53, 0.15);
-  color: #e53935;
+  background: var(--danger-dim);
+  color: var(--accent);
 }
 
 .h-range-label {
   font-size: 11px;
-  color: #444;
+  color: var(--text-hint);
   margin-top: 6px;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.6px;
   flex-shrink: 0;
 }
 
@@ -101,29 +111,33 @@
 /* ── Empty states ─────────────────────────────────────────── */
 .h-empty {
   font-size: 13px;
-  color: #444;
+  color: var(--text-hint);
   text-align: center;
   padding: 20px 0 6px;
 }
 
 /* ── Tooltips ─────────────────────────────────────────────── */
 .h-tooltip {
-  background: #2a2a2a;
-  border: 1px solid #3a3a3a;
-  border-radius: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
   padding: 8px 12px;
+  box-shadow: var(--shadow-card);
 }
 
 .h-tooltip-date {
   font-size: 11px;
-  color: #888;
+  color: var(--text-muted);
   margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .h-tooltip-value {
-  font-size: 15px;
+  font-family: var(--font-display);
+  font-size: 16px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 /* ── Sections ─────────────────────────────────────────────── */
@@ -136,22 +150,23 @@
 .h-section-title {
   font-size: 11px;
   font-weight: 700;
-  color: #555;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 1.5px;
   padding: 0 2px;
 }
 
 /* ── Workout list ─────────────────────────────────────────── */
 .h-workout-list {
-  background: #1e1e1e;
-  border: 1px solid #2a2a2a;
-  border-radius: 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
   overflow: hidden;
+  box-shadow: var(--shadow-card);
 }
 
 .h-workout-item {
-  border-bottom: 1px solid #252525;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .h-workout-item:last-child {
@@ -165,16 +180,16 @@
   width: 100%;
   background: none;
   border: none;
-  padding: 14px 16px;
+  padding: 15px 16px;
   cursor: pointer;
   text-align: left;
   color: inherit;
-  transition: background 0.12s;
+  transition: background var(--transition);
   gap: 10px;
 }
 
 .h-workout-row:hover {
-  background: #252525;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .h-workout-info {
@@ -184,8 +199,8 @@
 
 .h-workout-name {
   font-size: 15px;
-  font-weight: 600;
-  color: #e0e0e0;
+  font-weight: 700;
+  color: var(--text-primary);
   margin-bottom: 3px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -194,13 +209,13 @@
 
 .h-workout-meta {
   font-size: 12px;
-  color: #555;
+  color: var(--text-muted);
 }
 
 /* Chevron rotates when expanded */
 .h-chevron {
-  font-size: 20px;
-  color: #444;
+  font-size: 18px;
+  color: var(--text-hint);
   flex-shrink: 0;
   transition: transform 0.2s ease;
   display: inline-block;
@@ -214,7 +229,7 @@
 /* ── Expanded workout detail ──────────────────────────────── */
 .h-workout-detail {
   padding: 6px 16px 14px;
-  border-top: 1px solid #222;
+  border-top: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -229,9 +244,9 @@
 .h-ex-name {
   font-size: 11px;
   font-weight: 700;
-  color: #666;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
 }
 
 .h-ex-chips {
@@ -241,17 +256,17 @@
 }
 
 .h-ex-chip {
-  background: #2a2a2a;
-  border: 1px solid #333;
-  border-radius: 5px;
-  color: #bbb;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
   font-size: 11px;
   font-weight: 600;
-  padding: 3px 7px;
+  padding: 3px 8px;
   white-space: nowrap;
 }
 
 .h-ex-empty {
   font-size: 12px;
-  color: #444;
+  color: var(--text-hint);
 }

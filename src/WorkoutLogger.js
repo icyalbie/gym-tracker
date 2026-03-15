@@ -1,20 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from './supabase';
 import './WorkoutLogger.css';
 
 // ── Storage keys ────────────────────────────────────────────
-const EXERCISES_KEY = 'gymtracker_exercises';
-const TEMPLATES_KEY = 'gymtracker_templates';
-const WORKOUTS_KEY  = 'gymtracker_workouts';
-const ACTIVE_KEY    = 'gymtracker_active_workout';
-const WEIGHT_KEY    = 'gymtracker_weight';
+const EXERCISES_KEY  = 'gymtracker_exercises';
+const TEMPLATES_KEY  = 'gymtracker_templates';
+const WORKOUTS_KEY   = 'gymtracker_workouts';
+const ACTIVE_KEY     = 'gymtracker_active_workout';
+const WEIGHT_KEY     = 'gymtracker_weight';
+const CATEGORIES_KEY = 'gymtracker_categories';
 
 // ── Exercise library defaults ────────────────────────────────
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   'Vertical Pull', 'Vertical Push',
   'Horizontal Pull', 'Horizontal Push',
   'Hinge', 'Squat', 'Accessory',
 ];
+
+function loadCategories() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(CATEGORIES_KEY));
+    if (Array.isArray(stored) && stored.length > 0) return stored;
+  } catch {}
+  return [...DEFAULT_CATEGORIES];
+}
 
 const DEFAULT_EXERCISES = [
   { id: 'vpl-1', name: 'Pull-up',               category: 'Vertical Pull',   custom: false },
@@ -57,6 +66,12 @@ const CAT_SHORT = {
   'Squat':           'Squat',
   'Accessory':       'Acc.',
 };
+
+function catShort(cat) {
+  if (CAT_SHORT[cat]) return CAT_SHORT[cat];
+  // Truncate long custom category names to fit the cell
+  return cat.length > 8 ? cat.slice(0, 7) + '…' : cat;
+}
 
 function load(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key)) || fallback; }
@@ -144,6 +159,65 @@ function WorkoutLogger({ userId }) {
   const [selectedWorkout,   setSelectedWorkout]   = useState(null);
   const [expandedWorkoutId, setExpandedWorkoutId] = useState(null);
 
+  // Template carousel
+  const carouselRef = useRef(null);
+  const [activeCardIdx, setActiveCardIdx] = useState(0);
+  const dragState = useRef({ isDown: false, startX: 0, scrollLeft: 0 });
+
+  // Exercise drag-to-reorder
+  const exDragSrc = useRef(null);
+
+  // Template editor: rename
+  const [renamingExIdx, setRenamingExIdx] = useState(null);
+  const [renameVal,     setRenameVal]     = useState('');
+
+  // Set initial scroll to position 1 (past the prepended clone) when templates first load
+  useEffect(() => {
+    const el = carouselRef.current;
+    if (el && templates.length > 1 && el.scrollLeft === 0) {
+      el.scrollLeft = el.clientWidth;
+    }
+  }, [templates.length]);
+
+  function handleCarouselScroll() {
+    const el = carouselRef.current;
+    if (!el) return;
+    // Real cards start at array index 1, so subtract 1 before modding
+    setActiveCardIdx((Math.round(el.scrollLeft / el.clientWidth) - 1 + templates.length) % templates.length);
+  }
+
+  function handleCarouselMouseDown(e) {
+    const el = carouselRef.current;
+    if (!el) return;
+    dragState.current = { isDown: true, startX: e.pageX, scrollLeft: el.scrollLeft };
+    el.style.cursor = 'grabbing';
+    el.style.userSelect = 'none';
+  }
+
+  function handleCarouselMouseMove(e) {
+    const el = carouselRef.current;
+    if (!el || !dragState.current.isDown) return;
+    e.preventDefault();
+    el.scrollLeft = dragState.current.scrollLeft - (e.pageX - dragState.current.startX);
+  }
+
+  function handleCarouselMouseUp() {
+    const el = carouselRef.current;
+    if (!el || !dragState.current.isDown) return;
+    dragState.current.isDown = false;
+    el.style.cursor = '';
+    el.style.userSelect = '';
+    const cardWidth = el.clientWidth;
+    const rawIdx = Math.round(el.scrollLeft / cardWidth);
+    el.scrollTo({ left: rawIdx * cardWidth, behavior: 'smooth' });
+    // Teleport after snap animation: clone at end → real first, clone at start → real last
+    if (rawIdx >= templates.length + 1) {
+      setTimeout(() => { if (carouselRef.current) carouselRef.current.scrollLeft = cardWidth; }, 320);
+    } else if (rawIdx <= 0) {
+      setTimeout(() => { if (carouselRef.current) carouselRef.current.scrollLeft = templates.length * cardWidth; }, 320);
+    }
+  }
+
   // Template draft
   const [draftName,      setDraftName]      = useState('');
   const [draftExercises, setDraftExercises] = useState([]);
@@ -156,7 +230,8 @@ function WorkoutLogger({ userId }) {
   const [pickerSearch,  setPickerSearch]  = useState('');
   const [showNewExForm, setShowNewExForm] = useState(false);
   const [newExName,     setNewExName]     = useState('');
-  const [newExCategory, setNewExCategory] = useState(CATEGORIES[0]);
+  const [categories,    setCategories]    = useState(loadCategories);
+  const [newExCategory, setNewExCategory] = useState(() => loadCategories()[0]);
 
   // Exercise stats sheet (active workout)
   const [activeExSheet, setActiveExSheet] = useState(null); // exIdx | null
@@ -243,6 +318,30 @@ function WorkoutLogger({ userId }) {
     }
   }
 
+  // ── Exercise reordering ─────────────────────────────────────
+  function reorderWorkoutEx(fromIdx, toIdx) {
+    if (fromIdx === toIdx) return;
+    const exs = [...activeWorkout.exercises];
+    const [moved] = exs.splice(fromIdx, 1);
+    exs.splice(toIdx, 0, moved);
+    saveActive({ ...activeWorkout, exercises: exs });
+  }
+
+  function reorderDraftEx(fromIdx, toIdx) {
+    if (fromIdx === toIdx) return;
+    const exs = [...draftExercises];
+    const [moved] = exs.splice(fromIdx, 1);
+    exs.splice(toIdx, 0, moved);
+    setDraftExercises(exs);
+  }
+
+  function commitRename(idx) {
+    if (renameVal.trim()) {
+      setDraftExercises(prev => prev.map((ex, i) => i === idx ? { ...ex, name: renameVal.trim() } : ex));
+    }
+    setRenamingExIdx(null);
+  }
+
   // ── Template creation / editing ────────────────────────────
   function openCreate() {
     setEditTmplId(null); setDraftName(''); setDraftExercises([]); setView('create');
@@ -301,6 +400,10 @@ function WorkoutLogger({ userId }) {
   // ── Exercise picker ────────────────────────────────────────
   // target: null = template editor | { action:'swap', idx } | { action:'add' }
   function openPicker(target = null) {
+    // Reload categories in case user updated them on the Exercises page
+    const fresh = loadCategories();
+    setCategories(fresh);
+    setNewExCategory(fresh[0]);
     setPickerTarget(target);
     setPickerSearch(''); setShowNewExForm(false); setNewExName(''); setShowPicker(true);
   }
@@ -355,7 +458,10 @@ function WorkoutLogger({ userId }) {
     ? exercises.filter(e => e.name.toLowerCase().includes(pickerSearch.toLowerCase()))
     : exercises;
 
-  const pickerGrouped = CATEGORIES
+  // Include any exercises in categories not in the list (e.g. legacy data)
+  const knownCats = new Set(categories);
+  const extraCats = [...new Set(filteredExercises.map(e => e.category).filter(c => !knownCats.has(c)))];
+  const pickerGrouped = [...categories, ...extraCats]
     .map(cat => ({ category: cat, list: filteredExercises.filter(e => e.category === cat) }))
     .filter(g => g.list.length > 0);
 
@@ -410,7 +516,7 @@ function WorkoutLogger({ userId }) {
   function handleAddSet() {
     const w = parseFloat(addSetW);
     const r = parseInt(addSetR, 10);
-    if (isNaN(w) || isNaN(r) || w <= 0 || r < 1) return;
+    if (isNaN(w) || isNaN(r) || w < 0 || r < 1) return;
     const { source, exIdx } = addSetModal;
 
     let finalWeight = w;
@@ -447,7 +553,7 @@ function WorkoutLogger({ userId }) {
   function handleSaveEditSet() {
     const w = parseFloat(editSetW);
     const r = parseInt(editSetR, 10);
-    if (isNaN(w) || isNaN(r) || w <= 0 || r < 1) return;
+    if (isNaN(w) || isNaN(r) || w < 0 || r < 1) return;
     const { source, exIdx, setIdx } = editSetCtx;
 
     let finalWeight = w;
@@ -536,16 +642,26 @@ function WorkoutLogger({ userId }) {
 
   // ── Shared: workout table rows ─────────────────────────────
   function WorkoutTable({ workout, source }) {
+    const draggable = source === 'active';
     return (
       <div className="wl-table-card">
-        <div className="wl-table-head workout-head">
+        <div className={`wl-table-head workout-head${draggable ? ' with-handle' : ''}`}>
+          {draggable && <span />}
           <span>Category</span>
           <span>Exercise</span>
           <span>Sets</span>
         </div>
         {workout.exercises.map((ex, i) => (
-          <div key={i} className="wl-table-row workout-row">
-            <span className="wl-cell-cat">{CAT_SHORT[ex.category]}</span>
+          <div
+            key={i}
+            className={`wl-table-row workout-row${draggable ? ' with-handle' : ''}`}
+            draggable={draggable}
+            onDragStart={draggable ? () => { exDragSrc.current = i; } : undefined}
+            onDragOver={draggable ? e => e.preventDefault() : undefined}
+            onDrop={draggable ? () => { reorderWorkoutEx(exDragSrc.current, i); exDragSrc.current = null; } : undefined}
+          >
+            {draggable && <span className="wl-drag-handle">⠿</span>}
+            <span className="wl-cell-cat">{catShort(ex.category)}</span>
             <span
               className={`wl-cell-name${source === 'active' ? ' wl-cell-name-tap' : ''}`}
               onClick={source === 'active' ? () => setActiveExSheet(i) : undefined}
@@ -606,6 +722,7 @@ function WorkoutLogger({ userId }) {
     showNewExForm, setShowNewExForm,
     newExName, setNewExName,
     newExCategory, setNewExCategory,
+    categories,
     onClose: () => setShowPicker(false),
     onSelect: handlePickerSelect,
     onCreate: handleCreateNewExercise,
@@ -639,18 +756,53 @@ function WorkoutLogger({ userId }) {
         {templates.length === 0 ? (
           <p className="wl-empty-text">No templates yet — tap + to create one.</p>
         ) : (
-          <div className="wl-card-list">
-            {templates.map(t => (
-              <div key={t.id} className="wl-template-card">
-                <button className="wl-template-info" onClick={() => openEditTemplate(t)}>
-                  <p className="wl-template-name">{t.name}</p>
-                  <p className="wl-template-meta">
-                    {t.exercises.length} exercise{t.exercises.length !== 1 ? 's' : ''}
-                  </p>
-                </button>
-                <button className="wl-start-btn" onClick={() => startWorkout(t)}>Start</button>
+          <div className="wl-carousel-wrap">
+            <div
+              className="wl-carousel"
+              ref={carouselRef}
+              onScroll={handleCarouselScroll}
+              onMouseDown={handleCarouselMouseDown}
+              onMouseMove={handleCarouselMouseMove}
+              onMouseUp={handleCarouselMouseUp}
+              onMouseLeave={handleCarouselMouseUp}
+            >
+              {(templates.length > 1
+                ? [templates[templates.length - 1], ...templates, templates[0]]
+                : templates
+              ).map((t, arrIdx) => (
+                <div key={arrIdx} className="wl-carousel-card">
+                  <div className="wl-carousel-card-header">
+                    <div>
+                      <p className="wl-carousel-name">{t.name}</p>
+                      <p className="wl-carousel-meta">
+                        {t.exercises.length} exercise{t.exercises.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    <button className="wl-carousel-edit-btn" onClick={() => openEditTemplate(t)}>
+                      Edit
+                    </button>
+                  </div>
+                  <div className="wl-carousel-exercises">
+                    {t.exercises.map((ex, i) => (
+                      <div key={i} className="wl-carousel-ex-row">
+                        <span className="wl-carousel-ex-cat">{catShort(ex.category)}</span>
+                        <span className="wl-carousel-ex-name">{ex.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button className="wl-carousel-start-btn" onClick={() => startWorkout(t)}>
+                    Start Workout
+                  </button>
+                </div>
+              ))}
+            </div>
+            {templates.length > 1 && (
+              <div className="wl-carousel-dots">
+                {templates.map((_, i) => (
+                  <div key={i} className={`wl-carousel-dot${i === activeCardIdx ? ' active' : ''}`} />
+                ))}
               </div>
-            ))}
+            )}
           </div>
         )}
       </div>
@@ -725,15 +877,39 @@ function WorkoutLogger({ userId }) {
 
       {draftExercises.length > 0 && (
         <div className="wl-table-card">
-          <div className="wl-table-head tmpl-head">
+          <div className="wl-table-head tmpl-head with-handle">
+            <span />
             <span>Category</span>
             <span>Exercise</span>
             <span></span>
           </div>
           {draftExercises.map((ex, i) => (
-            <div key={i} className="wl-table-row tmpl-row">
-              <span className="wl-cell-cat">{CAT_SHORT[ex.category]}</span>
-              <span className="wl-cell-name">{ex.name}</span>
+            <div
+              key={i}
+              className="wl-table-row tmpl-row"
+              draggable
+              onDragStart={() => { exDragSrc.current = i; }}
+              onDragOver={e => e.preventDefault()}
+              onDrop={() => { reorderDraftEx(exDragSrc.current, i); exDragSrc.current = null; }}
+            >
+              <span className="wl-drag-handle">⠿</span>
+              <span className="wl-cell-cat">{catShort(ex.category)}</span>
+              {renamingExIdx === i ? (
+                <input
+                  className="wl-rename-input"
+                  value={renameVal}
+                  autoFocus
+                  onChange={e => setRenameVal(e.target.value)}
+                  onBlur={() => commitRename(i)}
+                  onKeyDown={e => { if (e.key === 'Enter') commitRename(i); if (e.key === 'Escape') setRenamingExIdx(null); }}
+                />
+              ) : (
+                <span
+                  className="wl-cell-name wl-cell-name-tap"
+                  onClick={() => { setRenamingExIdx(i); setRenameVal(ex.name); }}
+                  title="Tap to rename"
+                >{ex.name}</span>
+              )}
               <button
                 className="wl-remove-btn"
                 onClick={() => setDraftExercises(prev => prev.filter((_, j) => j !== i))}
@@ -885,7 +1061,8 @@ function ExerciseStatsSheet({ exIdx, workout, workouts, onClose, onSwap }) {
 function PickerModal({
   show, pickerSearch, setPickerSearch, pickerGrouped,
   showNewExForm, setShowNewExForm, newExName, setNewExName,
-  newExCategory, setNewExCategory, onClose, onSelect, onCreate,
+  newExCategory, setNewExCategory, categories,
+  onClose, onSelect, onCreate,
 }) {
   if (!show) return null;
   return (
@@ -908,7 +1085,7 @@ function PickerModal({
             <div className="wl-field">
               <label className="wl-field-label">Category</label>
               <select className="wl-select" value={newExCategory} onChange={e => setNewExCategory(e.target.value)}>
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div className="wl-modal-actions">
@@ -987,7 +1164,7 @@ function AddSetModal({ ctx, workout, w, setW, r, setR, onClose, onAdd,
         )}
         <div className="wl-modal-actions">
           <button className="wl-cancel-btn" onClick={onClose}>Cancel</button>
-          <button className="wl-save-btn" onClick={onAdd} disabled={!w || !r}>Add Set</button>
+          <button className="wl-save-btn" onClick={onAdd} disabled={w === '' || !r}>Add Set</button>
         </div>
       </div>
     </div>
@@ -1030,7 +1207,7 @@ function EditSetModal({ ctx, workout, w, setW, r, setR, onClose, onSave, onDelet
         )}
         <div className="wl-modal-actions">
           <button className="wl-cancel-btn" onClick={onClose}>Cancel</button>
-          <button className="wl-save-btn" onClick={onSave} disabled={!w || !r}>Save</button>
+          <button className="wl-save-btn" onClick={onSave} disabled={w === '' || !r}>Save</button>
         </div>
         <button className="wl-delete-set-btn" onClick={onDelete}>Delete Set</button>
       </div>

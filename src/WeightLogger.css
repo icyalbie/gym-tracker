@@ -11,18 +11,22 @@
 }
 
 .wl-sub {
-  font-size: 13px;
-  color: #666;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
 }
 
 .wl-title {
-  font-size: 26px;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: 0.5px;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  line-height: 1;
   margin-bottom: 8px;
 }
 
@@ -33,34 +37,37 @@
 }
 
 .wl-current {
-  font-size: 20px;
+  font-family: var(--font-display);
+  font-size: 22px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .change-badge {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   padding: 4px 10px;
-  border-radius: 20px;
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.3px;
 }
 
 .change-badge.down {
-  background: rgba(46, 213, 115, 0.15);
-  color: #2ed573;
+  background: var(--success-dim);
+  color: var(--success);
 }
 
 .change-badge.up {
-  background: rgba(229, 57, 53, 0.15);
-  color: #e53935;
+  background: var(--danger-dim);
+  color: var(--accent);
 }
 
 /* ── Chart card ───────────────────────────────────────────── */
 .wl-chart-card {
-  background: #1e1e1e;
-  border-radius: 16px;
-  padding: 16px 16px 12px;
-  border: 1px solid #2a2a2a;
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px 14px;
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-card);
 }
 
 /* Row inside the card: range pills left, + button right */
@@ -78,25 +85,27 @@
 
 .wl-range-btn {
   background: none;
-  border: 1px solid #333;
-  border-radius: 6px;
-  color: #555;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-family: var(--font-body);
   font-size: 12px;
-  font-weight: 600;
-  padding: 4px 9px;
+  font-weight: 700;
+  padding: 5px 11px;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
-  letter-spacing: 0.3px;
+  transition: color var(--transition), border-color var(--transition), background var(--transition);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .wl-range-btn:hover {
-  color: #aaa;
-  border-color: #555;
+  color: var(--text-secondary);
+  border-color: #4a4a4a;
 }
 
 .wl-range-btn.active {
-  background: #e53935;
-  border-color: #e53935;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #ffffff;
 }
 
@@ -111,28 +120,28 @@
 .wl-nav-arrow {
   background: none;
   border: none;
-  color: #666;
+  color: var(--text-muted);
   font-size: 22px;
   line-height: 1;
   padding: 2px 8px;
   cursor: pointer;
-  transition: color 0.15s;
+  transition: color var(--transition);
   user-select: none;
 }
 
 .wl-nav-arrow:hover:not(:disabled) {
-  color: #ccc;
+  color: var(--text-secondary);
 }
 
 .wl-nav-arrow:disabled {
-  color: #333;
+  color: var(--text-hint);
   cursor: default;
 }
 
 .wl-nav-label {
   font-size: 13px;
   font-weight: 600;
-  color: #aaa;
+  color: var(--text-secondary);
   letter-spacing: 0.2px;
 }
 
@@ -140,8 +149,8 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #e53935;
-  color: #ffffff;
+  background: var(--accent);
+  color: #0a0a0a;
   border: none;
   font-size: 22px;
   line-height: 1;
@@ -149,13 +158,14 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
+  transition: background var(--transition), transform 0.1s;
   padding: 0;
-  padding-bottom: 1px; /* optical centering of + */
+  padding-bottom: 1px;
+  box-shadow: 0 2px 10px rgba(230, 57, 70, 0.35);
 }
 
 .wl-add-btn:hover {
-  background: #ff5252;
+  background: var(--accent-hover);
   transform: scale(1.08);
 }
 
@@ -164,19 +174,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #555;
+  color: var(--text-muted);
   font-size: 14px;
   text-align: center;
   padding: 0 20px;
 }
 
 .wl-empty-chart strong {
-  color: #888;
+  color: var(--text-secondary);
 }
 
 .wl-chart-hint {
   font-size: 11px;
-  color: #444;
+  color: var(--text-hint);
   text-align: center;
   margin-top: 10px;
   letter-spacing: 0.2px;
@@ -184,29 +194,33 @@
 
 /* ── Tooltip ──────────────────────────────────────────────── */
 .wl-tooltip {
-  background: #2a2a2a;
-  border: 1px solid #3a3a3a;
-  border-radius: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
   padding: 8px 12px;
+  box-shadow: var(--shadow-card);
 }
 
 .wl-tooltip-date {
   font-size: 11px;
-  color: #888;
+  color: var(--text-muted);
   margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .wl-tooltip-value {
-  font-size: 15px;
+  font-family: var(--font-display);
+  font-size: 16px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 /* ── Modal shared ─────────────────────────────────────────── */
 .wl-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -215,23 +229,26 @@
 }
 
 .wl-modal {
-  background: #1e1e1e;
-  border: 1px solid #2a2a2a;
-  border-radius: 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
   padding: 28px 24px;
   width: 100%;
   max-width: 340px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  box-shadow: var(--shadow-modal);
 }
 
 .wl-modal-title {
-  font-size: 17px;
+  font-family: var(--font-display);
+  font-size: 20px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
   text-align: center;
   margin-bottom: -4px;
+  letter-spacing: -0.2px;
 }
 
 /* ── Field (label + input) ────────────────────────────────── */
@@ -242,31 +259,31 @@
 }
 
 .wl-field-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.2px;
 }
 
 /* Date input */
 .wl-date-input {
-  background: #141414;
-  border: 1px solid #333;
-  border-radius: 10px;
-  color: #ffffff;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 600;
   padding: 12px 14px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color var(--transition);
   width: 100%;
-  /* style the calendar picker icon to match theme */
   color-scheme: dark;
 }
 
 .wl-date-input:focus {
-  border-color: #e53935;
+  border-color: var(--accent);
 }
 
 /* Weight input row */
@@ -279,17 +296,20 @@
 .wl-input {
   flex: 1;
   width: 100%;
-  background: #141414;
-  border: 1px solid #333;
-  border-radius: 10px;
-  color: #ffffff;
-  font-size: 28px;
-  font-weight: 700;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 900;
   padding: 12px 16px;
   text-align: center;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color var(--transition);
   -moz-appearance: textfield;
+  appearance: textfield;
+  letter-spacing: 1px;
 }
 
 .wl-input::-webkit-outer-spin-button,
@@ -298,12 +318,12 @@
 }
 
 .wl-input:focus {
-  border-color: #e53935;
+  border-color: var(--accent);
 }
 
 .wl-unit {
   font-size: 18px;
-  color: #555;
+  color: var(--text-muted);
   font-weight: 600;
   min-width: 30px;
 }
@@ -316,36 +336,39 @@
 
 .wl-cancel-btn {
   flex: 1;
-  background: #2a2a2a;
-  color: #aaa;
-  border: 1px solid #333;
-  border-radius: 12px;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-pill);
   padding: 14px;
+  font-family: var(--font-body);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background var(--transition);
 }
 
 .wl-cancel-btn:hover {
-  background: #333;
+  background: #252525;
 }
 
 .wl-save-btn {
   flex: 1;
-  background: #e53935;
+  background: var(--accent);
   color: #ffffff;
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-pill);
   padding: 14px;
+  font-family: var(--font-body);
   font-size: 15px;
   font-weight: 700;
+  letter-spacing: 0.3px;
   cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
+  transition: background var(--transition), opacity var(--transition);
 }
 
 .wl-save-btn:hover:not(:disabled) {
-  background: #ff5252;
+  background: var(--accent-hover);
 }
 
 .wl-save-btn:disabled {

@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { supabase } from './supabase';
 import './Exercises.css';
 
-const STORAGE_KEY  = 'gymtracker_exercises';
-const WORKOUTS_KEY = 'gymtracker_workouts';
+const STORAGE_KEY     = 'gymtracker_exercises';
+const WORKOUTS_KEY    = 'gymtracker_workouts';
+const CATEGORIES_KEY  = 'gymtracker_categories';
 
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   'Vertical Pull',
   'Vertical Push',
   'Horizontal Pull',
@@ -23,12 +24,12 @@ const DEFAULT_EXERCISES = [
   { id: 'vpu-1', name: 'Overhead Press',       category: 'Vertical Push',    custom: false },
   { id: 'vpu-2', name: 'Dumbbell Shoulder Press', category: 'Vertical Push', custom: false },
   // Horizontal Pull
-  { id: 'hpl-1', name: 'Seal Row',  category: 'Horizontal Pull',  custom: false },
-  { id: 'hpl-2', name: 'T-Bar Row',  category: 'Horizontal Pull',  custom: false },
+  { id: 'hpl-1', name: 'Seal Row',             category: 'Horizontal Pull',  custom: false },
+  { id: 'hpl-2', name: 'T-Bar Row',            category: 'Horizontal Pull',  custom: false },
   // Horizontal Push
   { id: 'hpu-1', name: 'Bench Press',          category: 'Horizontal Push',  custom: false },
-  { id: 'hpu-2', name: 'Dips', category: 'Horizontal Push',  custom: false },
-  { id: 'hpu-3', name: 'Cambered Bar Bench',  category: 'Horizontal Push',  custom: false },
+  { id: 'hpu-2', name: 'Dips',                 category: 'Horizontal Push',  custom: false },
+  { id: 'hpu-3', name: 'Cambered Bar Bench',   category: 'Horizontal Push',  custom: false },
   { id: 'hpu-4', name: 'Push-up',              category: 'Horizontal Push',  custom: false },
   // Hinge
   { id: 'hin-1', name: 'Deadlift',             category: 'Hinge',            custom: false },
@@ -50,6 +51,14 @@ function loadJSON(key, fallback) {
   catch { return fallback; }
 }
 
+function loadCategories() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(CATEGORIES_KEY));
+    if (Array.isArray(stored) && stored.length > 0) return stored;
+  } catch {}
+  return [...DEFAULT_CATEGORIES];
+}
+
 function formatExDate(dateStr) {
   const [year, m, d] = dateStr.split('-');
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -65,6 +74,8 @@ function Exercises({ userId }) {
   const [workouts, setWorkouts] = useState(() =>
     isGuest ? loadJSON(WORKOUTS_KEY, []) : []
   );
+  const [categories, setCategories] = useState(loadCategories);
+  const [expandedCategories, setExpandedCategories] = useState(new Set());
 
   useEffect(() => {
     if (isGuest) return;
@@ -90,21 +101,38 @@ function Exercises({ userId }) {
     });
   }, [userId, isGuest]);
 
-  // Exercise detail sheet
+  // ── Exercise detail sheet ──────────────────────────────────
   const [selected, setSelected] = useState(null);
 
-  // Add exercise modal
-  const [showAdd,      setShowAdd]      = useState(false);
-  const [newName,      setNewName]      = useState('');
-  const [newCategory,  setNewCategory]  = useState(CATEGORIES[0]);
+  // ── Add exercise modal ────────────────────────────────────
+  const [showAdd,     setShowAdd]     = useState(false);
+  const [newName,     setNewName]     = useState('');
+  const [newCategory, setNewCategory] = useState(categories[0]);
 
-  // Drag-and-drop reorder
+  // ── Add category modal ────────────────────────────────────
+  const [showAddCategory,  setShowAddCategory]  = useState(false);
+  const [newCategoryName,  setNewCategoryName]  = useState('');
+
+  // ── Drag-and-drop reorder ─────────────────────────────────
   const [dragSrcId,  setDragSrcId]  = useState(null);
   const [dragOverId, setDragOverId] = useState(null);
 
   function saveExercises(updated) {
     setExercises(updated);
     if (isGuest) localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  }
+
+  function saveCategories(updated) {
+    setCategories(updated);
+    localStorage.setItem(CATEGORIES_KEY, JSON.stringify(updated));
+  }
+
+  function toggleCategory(cat) {
+    setExpandedCategories(prev => {
+      const next = new Set(prev);
+      next.has(cat) ? next.delete(cat) : next.add(cat);
+      return next;
+    });
   }
 
   async function handleDelete(id) {
@@ -133,8 +161,39 @@ function Exercises({ userId }) {
       if (data) setExercises(prev => [...prev, { id: data.id, name: data.name, category: data.category }]);
     }
     setNewName('');
-    setNewCategory(CATEGORIES[0]);
+    setNewCategory(categories[0]);
     setShowAdd(false);
+  }
+
+  function handleAddCategory() {
+    const name = newCategoryName.trim();
+    if (!name || categories.includes(name)) return;
+    const updated = [...categories, name];
+    saveCategories(updated);
+    // Auto-expand the new category
+    setExpandedCategories(prev => new Set([...prev, name]));
+    setNewCategoryName('');
+    setShowAddCategory(false);
+  }
+
+  async function handleDeleteCategory(cat) {
+    const toDelete = exercises.filter(e => e.category === cat);
+    if (isGuest) {
+      saveExercises(exercises.filter(e => e.category !== cat));
+    } else {
+      for (const ex of toDelete) {
+        await supabase.from('exercises').delete().eq('id', ex.id);
+      }
+      setExercises(prev => prev.filter(e => e.category !== cat));
+    }
+    const updatedCats = categories.filter(c => c !== cat);
+    saveCategories(updatedCats);
+    setExpandedCategories(prev => {
+      const next = new Set(prev);
+      next.delete(cat);
+      return next;
+    });
+    if (selected?.category === cat) setSelected(null);
   }
 
   // ── Drag-and-drop reorder ──────────────────────────────────
@@ -182,13 +241,11 @@ function Exercises({ userId }) {
 
     const allSets = sessions.flatMap(s => s.sets);
 
-    // 1RM: highest weight at exactly 1 rep
     const oneRepSets = allSets.filter(s => s.reps === 1);
     const oneRM = oneRepSets.length > 0
       ? Math.max(...oneRepSets.map(s => s.weight))
       : null;
 
-    // Rep PR: highest weight at 3+ reps; break ties by most reps
     const repPRSets = allSets.filter(s => s.reps >= 3);
     const repPR = repPRSets.length > 0
       ? repPRSets.reduce((best, s) =>
@@ -200,8 +257,7 @@ function Exercises({ userId }) {
     return { sessions, oneRM, repPR };
   }
 
-  // Group exercises by category, preserving CATEGORIES order
-  const grouped = CATEGORIES.map(cat => ({
+  const grouped = categories.map(cat => ({
     category: cat,
     exercises: exercises.filter(e => e.category === cat),
   }));
@@ -222,32 +278,64 @@ function Exercises({ userId }) {
         </button>
       </div>
 
-      {/* Category sections */}
-      {grouped.map(({ category, exercises: list }) => (
-        <div key={category} className="ex-category">
-          <p className="ex-category-label">{category}</p>
-          <div className="ex-list">
-            {list.map(ex => (
-              <button
-                key={ex.id}
-                className={`ex-row${dragSrcId === ex.id ? ' ex-dragging' : ''}${dragOverId === ex.id && dragSrcId !== ex.id ? ' ex-drag-over' : ''}`}
-                onClick={() => setSelected(ex)}
-                draggable
-                onDragStart={e => handleDragStart(e, ex.id)}
-                onDragOver={e => handleDragOver(e, ex.id)}
-                onDrop={e => handleDrop(e, ex.id)}
-                onDragEnd={handleDragEnd}
-              >
-                <span className="ex-row-name">{ex.name}</span>
-                <span className="ex-row-chevron">›</span>
-              </button>
-            ))}
-            {list.length === 0 && (
-              <p className="ex-empty">No exercises yet — tap + to add one.</p>
+      {/* Category cards */}
+      {grouped.map(({ category, exercises: list }) => {
+        const isExpanded = expandedCategories.has(category);
+        return (
+          <div key={category} className="ex-category-card">
+            {/* Card header — clicking toggles expand */}
+            <button
+              className="ex-category-header"
+              onClick={() => toggleCategory(category)}
+              aria-expanded={isExpanded}
+            >
+              <span className={`ex-category-chevron${isExpanded ? ' open' : ''}`}>›</span>
+              <span className="ex-category-name">{category}</span>
+              <span className="ex-category-count">{list.length}</span>
+            </button>
+
+            {/* Expanded content */}
+            {isExpanded && (
+              <div className="ex-category-body">
+                {list.length > 0 ? (
+                  <div className="ex-list">
+                    {list.map(ex => (
+                      <button
+                        key={ex.id}
+                        className={`ex-row${dragSrcId === ex.id ? ' ex-dragging' : ''}${dragOverId === ex.id && dragSrcId !== ex.id ? ' ex-drag-over' : ''}`}
+                        onClick={() => setSelected(ex)}
+                        draggable
+                        onDragStart={e => handleDragStart(e, ex.id)}
+                        onDragOver={e => handleDragOver(e, ex.id)}
+                        onDrop={e => handleDrop(e, ex.id)}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <span className="ex-row-name">{ex.name}</span>
+                        <span className="ex-row-chevron">›</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="ex-category-empty">No exercises yet — tap + to add one.</p>
+                )}
+
+                <button
+                  className="ex-delete-category-btn"
+                  onClick={() => handleDeleteCategory(category)}
+                >
+                  Delete Category
+                  {list.length > 0 && ` & ${list.length} exercise${list.length === 1 ? '' : 's'}`}
+                </button>
+              </div>
             )}
           </div>
-        </div>
-      ))}
+        );
+      })}
+
+      {/* Add Category button */}
+      <button className="ex-add-category-btn" onClick={() => setShowAddCategory(true)}>
+        + Add Category
+      </button>
 
       {/* Exercise detail sheet */}
       {selected && exData && (
@@ -346,7 +434,7 @@ function Exercises({ userId }) {
                 value={newCategory}
                 onChange={e => setNewCategory(e.target.value)}
               >
-                {CATEGORIES.map(cat => (
+                {categories.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
@@ -362,6 +450,41 @@ function Exercises({ userId }) {
                 disabled={!newName.trim()}
               >
                 Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add category modal */}
+      {showAddCategory && (
+        <div className="ex-overlay" onClick={() => setShowAddCategory(false)}>
+          <div className="ex-modal" onClick={e => e.stopPropagation()}>
+            <p className="ex-modal-title">New Category</p>
+
+            <div className="ex-field">
+              <label className="ex-field-label">Name</label>
+              <input
+                type="text"
+                className="ex-text-input"
+                placeholder="e.g. Core, Cardio…"
+                value={newCategoryName}
+                onChange={e => setNewCategoryName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAddCategory()}
+                autoFocus
+              />
+            </div>
+
+            <div className="ex-modal-actions">
+              <button className="ex-cancel-btn" onClick={() => { setShowAddCategory(false); setNewCategoryName(''); }}>
+                Cancel
+              </button>
+              <button
+                className="ex-save-btn"
+                onClick={handleAddCategory}
+                disabled={!newCategoryName.trim() || categories.includes(newCategoryName.trim())}
+              >
+                Add
               </button>
             </div>
           </div>

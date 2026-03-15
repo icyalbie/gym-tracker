@@ -14,41 +14,46 @@
 }
 
 .wl-sub {
-  font-size: 13px;
-  color: #666;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
 }
 
 .wl-title {
-  font-size: 26px;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: 0.5px;
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  line-height: 1;
 }
 
 .wl-add-btn {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: #e53935;
-  color: #ffffff;
+  background: var(--accent);
+  color: #0a0a0a;
   border: none;
   font-size: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
+  transition: background var(--transition), transform 0.1s;
   padding: 0;
   padding-bottom: 1px;
   flex-shrink: 0;
   margin-bottom: 2px;
+  box-shadow: 0 4px 16px rgba(230, 57, 70, 0.4);
 }
 
 .wl-add-btn:hover {
-  background: #ff5252;
+  background: var(--accent-hover);
   transform: scale(1.08);
 }
 
@@ -57,39 +62,40 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(229, 57, 53, 0.12);
-  border: 1px solid rgba(229, 57, 53, 0.35);
-  border-radius: 14px;
-  padding: 14px 16px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(230, 57, 70, 0.3);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
   cursor: pointer;
   text-align: left;
   width: 100%;
-  transition: background 0.15s;
+  transition: background var(--transition);
   color: inherit;
 }
 
 .wl-resume-banner:hover {
-  background: rgba(229, 57, 53, 0.2);
+  background: var(--accent-dim-hover);
 }
 
 .wl-resume-label {
   font-size: 11px;
-  font-weight: 700;
-  color: #e53935;
+  font-weight: 800;
+  color: var(--accent);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 3px;
+  letter-spacing: 1.2px;
+  margin-bottom: 4px;
 }
 
 .wl-resume-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #ffffff;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .wl-resume-arrow {
-  font-size: 22px;
-  color: #e53935;
+  font-size: 24px;
+  color: var(--accent);
+  line-height: 1;
 }
 
 /* ── Sections ─────────────────────────────────────────────── */
@@ -102,15 +108,15 @@
 .wl-section-title {
   font-size: 11px;
   font-weight: 700;
-  color: #555;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 1.5px;
   padding: 0 2px;
 }
 
 .wl-empty-text {
   font-size: 14px;
-  color: #444;
+  color: var(--text-hint);
   padding: 4px 2px;
 }
 
@@ -118,67 +124,171 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  background: #1e1e1e;
-  border-radius: 14px;
-  border: 1px solid #2a2a2a;
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-default);
   overflow: hidden;
+  box-shadow: var(--shadow-card);
 }
 
-/* ── Template card ────────────────────────────────────────── */
-.wl-template-card {
+/* ── Template carousel ─────────────────────────────────────── */
+.wl-carousel-wrap {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 12px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wl-carousel {
+  display: flex;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  cursor: grab;
+}
+
+.wl-carousel::-webkit-scrollbar { display: none; }
+
+.wl-carousel-card {
+  flex: 0 0 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-card);
+}
+
+.wl-carousel-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wl-carousel-name {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.wl-carousel-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.wl-carousel-edit-btn {
+  background: none;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.wl-carousel-edit-btn:hover {
+  color: var(--text-secondary);
+  border-color: #4a4a4a;
+}
+
+.wl-carousel-exercises {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 2px 0;
+  height: 340px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.wl-carousel-exercises::-webkit-scrollbar { display: none; }
+
+.wl-carousel-ex-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  border-bottom: 1px solid #252525;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-.wl-template-card:last-child {
-  border-bottom: none;
-}
+.wl-carousel-ex-row:last-child { border-bottom: none; }
 
-.wl-template-info {
-  flex: 1;
-  min-width: 0;
-  background: none;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-  padding: 0;
-  color: inherit;
-}
-
-.wl-template-info:hover .wl-template-name {
-  color: #e53935;
-}
-
-.wl-template-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: #e0e0e0;
-  margin-bottom: 2px;
-}
-
-.wl-template-meta {
-  font-size: 12px;
-  color: #555;
-}
-
-.wl-start-btn {
-  background: #e53935;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-size: 13px;
+.wl-carousel-ex-cat {
+  font-size: 10px;
   font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  width: 52px;
   flex-shrink: 0;
 }
 
-.wl-start-btn:hover {
-  background: #ff5252;
+.wl-carousel-ex-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wl-carousel-start-btn {
+  width: 100%;
+  background: var(--accent);
+  color: #0a0a0a;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 15px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: background var(--transition), box-shadow var(--transition);
+  box-shadow: 0 4px 16px rgba(230, 57, 70, 0.3);
+}
+
+.wl-carousel-start-btn:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 4px 20px rgba(230, 57, 70, 0.5);
+}
+
+/* ── Carousel dot indicators ──────────────────────────────── */
+.wl-carousel-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.wl-carousel-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-hint);
+  transition: background var(--transition), width var(--transition), border-radius var(--transition);
+}
+
+.wl-carousel-dot.active {
+  background: var(--accent);
+  width: 18px;
+  border-radius: 3px;
 }
 
 /* ── History card ─────────────────────────────────────────── */
@@ -186,47 +296,47 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
+  padding: 15px 16px;
   width: 100%;
   background: none;
   border: none;
   text-align: left;
   color: inherit;
   cursor: pointer;
-  transition: background 0.12s;
+  transition: background var(--transition);
 }
 
 .wl-history-card:hover {
-  background: #252525;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .wl-history-name {
   font-size: 15px;
-  font-weight: 600;
-  color: #e0e0e0;
-  margin-bottom: 2px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 3px;
 }
 
 .wl-history-meta {
   font-size: 12px;
-  color: #555;
+  color: var(--text-muted);
 }
 
 .wl-history-right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
 .wl-history-sets {
   font-size: 12px;
-  color: #555;
+  color: var(--text-muted);
 }
 
 .wl-row-chevron {
   font-size: 18px;
-  color: #444;
+  color: var(--text-hint);
   line-height: 1;
   transition: transform 0.2s ease;
   display: inline-block;
@@ -238,7 +348,7 @@
 
 /* ── History expandable item ──────────────────────────────── */
 .wl-history-item {
-  border-bottom: 1px solid #252525;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .wl-history-item:last-child {
@@ -247,7 +357,7 @@
 
 .wl-history-expanded {
   padding: 8px 14px 14px;
-  border-top: 1px solid #222;
+  border-top: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -263,42 +373,45 @@
 }
 
 .wl-nav-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--text-primary);
   flex: 1;
   text-align: center;
-  /* Prevent long names from pushing buttons */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .wl-back-btn {
   background: none;
   border: none;
-  color: #888;
+  color: var(--text-muted);
   font-size: 26px;
   line-height: 1;
   padding: 0 4px;
   cursor: pointer;
-  transition: color 0.15s;
+  transition: color var(--transition);
   flex-shrink: 0;
 }
 
 .wl-back-btn:hover {
-  color: #ccc;
+  color: var(--text-secondary);
 }
 
 .wl-header-save-btn {
   background: none;
   border: none;
-  color: #e53935;
+  color: var(--accent);
+  font-family: var(--font-body);
   font-size: 15px;
   font-weight: 700;
   padding: 0 4px;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: opacity var(--transition);
   flex-shrink: 0;
 }
 
@@ -308,51 +421,55 @@
 }
 
 .wl-finish-btn {
-  background: #2ed573;
+  background: var(--success);
   color: #0a0a0a;
   border: none;
-  border-radius: 8px;
-  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  font-family: var(--font-body);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background var(--transition);
   flex-shrink: 0;
+  letter-spacing: 0.3px;
 }
 
 .wl-finish-btn:hover {
-  background: #7bed9f;
+  background: #4ade80;
 }
 
 /* ── Template name input ──────────────────────────────────── */
 .wl-name-input {
-  background: #1e1e1e;
-  border: 1px solid #333;
-  border-radius: 12px;
-  color: #ffffff;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
   font-size: 18px;
   font-weight: 600;
-  padding: 14px 16px;
+  padding: 15px 16px;
   outline: none;
   width: 100%;
-  transition: border-color 0.2s;
+  transition: border-color var(--transition);
 }
 
 .wl-name-input::placeholder {
-  color: #444;
+  color: var(--text-hint);
   font-weight: 400;
 }
 
 .wl-name-input:focus {
-  border-color: #e53935;
+  border-color: var(--accent);
 }
 
 /* ── Exercise table card ──────────────────────────────────── */
 .wl-table-card {
-  background: #1e1e1e;
-  border: 1px solid #2a2a2a;
-  border-radius: 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
   overflow: hidden;
+  box-shadow: var(--shadow-card);
 }
 
 /* Column widths: category (fixed) | name (flex) | sets/remove (auto) */
@@ -364,26 +481,32 @@
   padding: 10px 14px;
 }
 
-/* Template builder: narrow remove button */
+/* Template builder: handle + cat + name + remove */
 .tmpl-head,
 .tmpl-row {
-  grid-template-columns: 70px minmax(0, 1fr) 28px;
+  grid-template-columns: 20px 70px minmax(0, 1fr) 28px;
 }
 
-/* Active workout: sets column is auto-sized */
-.workout-head,
-.workout-row {
+/* Active workout: handle + cat + name + sets */
+.workout-head.with-handle,
+.workout-row.with-handle {
+  grid-template-columns: 20px 70px minmax(0, 1fr) auto;
+}
+
+/* History (no handle) */
+.workout-head:not(.with-handle),
+.workout-row:not(.with-handle) {
   grid-template-columns: 70px minmax(0, 1fr) auto;
 }
 
 .wl-table-head {
-  background: #181818;
-  border-bottom: 1px solid #2a2a2a;
+  background: var(--bg-input);
+  border-bottom: 1px solid var(--border-default);
   font-size: 10px;
   font-weight: 700;
-  color: #555;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 1.2px;
 }
 
 .workout-head span:last-child {
@@ -391,8 +514,8 @@
 }
 
 .wl-table-row {
-  border-bottom: 1px solid #222;
-  min-height: 48px;
+  border-bottom: 1px solid var(--border-subtle);
+  min-height: 52px;
 }
 
 .wl-table-row:last-child {
@@ -401,15 +524,15 @@
 
 .wl-cell-cat {
   font-size: 11px;
-  font-weight: 600;
-  color: #555;
+  font-weight: 700;
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
 .wl-cell-name {
   font-size: 14px;
-  font-weight: 500;
-  color: #e0e0e0;
+  font-weight: 600;
+  color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -417,62 +540,90 @@
 
 .wl-cell-name-tap {
   cursor: pointer;
-  transition: color 0.12s;
+  transition: color var(--transition);
 }
 
 .wl-cell-name-tap:hover {
-  color: #e53935;
+  color: var(--accent);
+}
+
+/* ── Drag handle ───────────────────────────────────────────── */
+.wl-drag-handle {
+  cursor: grab;
+  color: var(--text-hint);
+  font-size: 14px;
+  opacity: 0.4;
+  user-select: none;
+  transition: opacity var(--transition);
+  line-height: 1;
+}
+
+.wl-drag-handle:hover { opacity: 0.8; }
+
+/* ── Rename input (template builder) ──────────────────────── */
+.wl-rename-input {
+  background: var(--bg-input);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 3px 8px;
+  outline: none;
+  width: 100%;
 }
 
 /* ── Remove button (template builder) ─────────────────────── */
 .wl-remove-btn {
   background: none;
   border: none;
-  color: #444;
+  color: var(--text-hint);
   font-size: 14px;
   cursor: pointer;
   padding: 4px;
-  transition: color 0.15s;
+  transition: color var(--transition);
   justify-self: end;
 }
 
 .wl-remove-btn:hover {
-  color: #e53935;
+  color: var(--accent);
 }
 
 /* ── Sets cell (active workout) ───────────────────────────── */
 .wl-cell-sets {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 5px;
   align-items: center;
   justify-content: flex-end;
 }
 
 .wl-set-chip {
-  background: #2a2a2a;
-  border: 1px solid #333;
-  border-radius: 5px;
-  color: #ccc;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  color: var(--text-secondary);
   font-size: 11px;
-  font-weight: 600;
-  padding: 3px 6px;
+  font-weight: 700;
+  padding: 4px 8px;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
 }
 
 .wl-set-chip:hover {
-  background: #333;
-  border-color: #444;
+  background: var(--accent-dim);
+  border-color: rgba(249, 115, 22, 0.3);
+  color: var(--accent);
 }
 
 .wl-add-set-btn {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: #e53935;
-  color: #ffffff;
+  background: var(--accent);
+  color: #0a0a0a;
   border: none;
   font-size: 18px;
   line-height: 1;
@@ -480,58 +631,63 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background var(--transition), box-shadow var(--transition);
   padding: 0;
   padding-bottom: 1px;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(230, 57, 70, 0.35);
 }
 
 .wl-add-set-btn:hover {
-  background: #ff5252;
+  background: var(--accent-hover);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.5);
 }
 
 /* ── Add Exercise button ──────────────────────────────────── */
 .wl-add-exercise-btn {
-  background: #1e1e1e;
-  border: 1px dashed #333;
-  border-radius: 12px;
-  color: #888;
+  background: var(--bg-surface);
+  border: 1.5px dashed var(--border-input);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-family: var(--font-body);
   font-size: 15px;
   font-weight: 600;
-  padding: 14px;
+  padding: 16px;
   cursor: pointer;
   width: 100%;
-  transition: border-color 0.15s, color 0.15s;
+  transition: border-color var(--transition), color var(--transition), background var(--transition);
 }
 
 .wl-add-exercise-btn:hover {
-  border-color: #e53935;
-  color: #e53935;
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
 }
 
 /* ── Abandon workout button ───────────────────────────────── */
 .wl-abandon-btn {
   background: none;
   border: none;
-  color: #444;
+  color: var(--text-hint);
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;
-  padding: 8px;
+  padding: 10px;
   cursor: pointer;
-  transition: color 0.15s;
+  transition: color var(--transition);
   width: 100%;
   text-align: center;
 }
 
 .wl-abandon-btn:hover {
-  color: #e53935;
+  color: var(--accent);
 }
 
 /* ── Overlay ──────────────────────────────────────────────── */
 .wl-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -541,9 +697,9 @@
 
 /* ── Exercise picker modal ────────────────────────────────── */
 .wl-picker-modal {
-  background: #1e1e1e;
-  border: 1px solid #2a2a2a;
-  border-radius: 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
   padding: 0;
   width: 100%;
   max-width: 400px;
@@ -551,73 +707,77 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: var(--shadow-modal);
 }
 
 .wl-picker-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 16px 12px;
-  border-bottom: 1px solid #2a2a2a;
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--border-default);
   flex-shrink: 0;
 }
 
 .wl-picker-title {
-  font-size: 16px;
+  font-family: var(--font-display);
+  font-size: 18px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .wl-picker-close {
-  background: #2a2a2a;
+  background: var(--bg-elevated);
   border: none;
-  color: #888;
-  width: 28px;
-  height: 28px;
+  color: var(--text-muted);
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background var(--transition);
 }
 
 .wl-picker-close:hover {
-  background: #333;
+  background: #2e2e2e;
 }
 
 .wl-search-input {
-  background: #141414;
+  background: var(--bg-input);
   border: none;
-  border-bottom: 1px solid #2a2a2a;
-  color: #ffffff;
+  border-bottom: 1px solid var(--border-default);
+  color: var(--text-primary);
+  font-family: var(--font-body);
   font-size: 14px;
-  padding: 12px 16px;
+  padding: 13px 16px;
   outline: none;
   flex-shrink: 0;
 }
 
 .wl-search-input::placeholder {
-  color: #444;
+  color: var(--text-hint);
 }
 
 .wl-new-ex-btn {
   background: none;
   border: none;
-  border-bottom: 1px solid #2a2a2a;
-  color: #e53935;
+  border-bottom: 1px solid var(--border-default);
+  color: var(--accent);
+  font-family: var(--font-body);
   font-size: 14px;
-  font-weight: 600;
-  padding: 12px 16px;
+  font-weight: 700;
+  padding: 13px 16px;
   cursor: pointer;
   text-align: left;
-  transition: background 0.12s;
+  transition: background var(--transition);
   flex-shrink: 0;
 }
 
 .wl-new-ex-btn:hover {
-  background: #252525;
+  background: var(--accent-dim);
 }
 
 .wl-picker-list {
@@ -628,11 +788,11 @@
 
 .wl-picker-category {
   font-size: 10px;
-  font-weight: 700;
-  color: #444;
+  font-weight: 800;
+  color: var(--text-hint);
   text-transform: uppercase;
-  letter-spacing: 0.7px;
-  padding: 10px 16px 4px;
+  letter-spacing: 1.2px;
+  padding: 12px 16px 5px;
 }
 
 .wl-picker-row {
@@ -640,22 +800,24 @@
   width: 100%;
   background: none;
   border: none;
-  color: #e0e0e0;
-  font-size: 14px;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 15px;
   font-weight: 500;
-  padding: 11px 16px;
+  padding: 13px 16px;
   text-align: left;
   cursor: pointer;
-  transition: background 0.12s;
+  transition: background var(--transition), color var(--transition);
 }
 
 .wl-picker-row:hover {
-  background: #252525;
+  background: rgba(249, 115, 22, 0.06);
+  color: var(--text-primary);
 }
 
 .wl-picker-empty {
   font-size: 13px;
-  color: #444;
+  color: var(--text-hint);
   text-align: center;
   padding: 24px 16px;
 }
@@ -676,39 +838,41 @@
 .wl-field-label {
   font-size: 11px;
   font-weight: 700;
-  color: #555;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.2px;
 }
 
 .wl-text-input {
-  background: #141414;
-  border: 1px solid #333;
-  border-radius: 10px;
-  color: #ffffff;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-body);
   font-size: 15px;
   padding: 12px 13px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color var(--transition);
 }
 
-.wl-text-input::placeholder { color: #444; }
-.wl-text-input:focus { border-color: #e53935; }
+.wl-text-input::placeholder { color: var(--text-hint); }
+.wl-text-input:focus { border-color: var(--accent); }
 
 .wl-select {
-  background: #141414;
-  border: 1px solid #333;
-  border-radius: 10px;
-  color: #ffffff;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-body);
   font-size: 15px;
   padding: 12px 13px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color var(--transition);
   cursor: pointer;
   color-scheme: dark;
 }
 
-.wl-select:focus { border-color: #e53935; }
+.wl-select:focus { border-color: var(--accent); }
 
 .wl-modal-actions {
   display: flex;
@@ -718,62 +882,70 @@
 
 .wl-cancel-btn {
   flex: 1;
-  background: #2a2a2a;
-  color: #aaa;
-  border: 1px solid #333;
-  border-radius: 12px;
-  padding: 13px;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-pill);
+  padding: 14px;
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background var(--transition);
 }
 
-.wl-cancel-btn:hover { background: #333; }
+.wl-cancel-btn:hover { background: #252525; }
 
 .wl-save-btn {
   flex: 1;
-  background: #e53935;
+  background: var(--accent);
   color: #ffffff;
   border: none;
-  border-radius: 12px;
-  padding: 13px;
+  border-radius: var(--radius-pill);
+  padding: 14px;
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 700;
+  letter-spacing: 0.3px;
   cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
+  transition: background var(--transition), opacity var(--transition);
 }
 
-.wl-save-btn:hover:not(:disabled) { background: #ff5252; }
+.wl-save-btn:hover:not(:disabled) { background: var(--accent-hover); }
 .wl-save-btn:disabled { opacity: 0.3; cursor: default; }
 
 /* ── Set logging modal ────────────────────────────────────── */
 .wl-set-modal {
-  background: #1e1e1e;
-  border: 1px solid #2a2a2a;
-  border-radius: 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
   padding: 24px 20px 20px;
   width: 100%;
   max-width: 320px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-shadow: var(--shadow-modal);
+  max-height: 88vh;
+  overflow-y: auto;
 }
 
 .wl-set-modal-title {
-  font-size: 17px;
+  font-family: var(--font-display);
+  font-size: 20px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
   text-align: center;
+  letter-spacing: -0.2px;
 }
 
 .wl-set-modal-sub {
-  font-size: 12px;
-  color: #555;
+  font-size: 11px;
+  color: var(--text-muted);
   text-align: center;
   margin-top: -10px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .wl-set-inputs {
@@ -791,28 +963,30 @@
 .wl-input-unit-row {
   display: flex;
   align-items: center;
-  background: #141414;
-  border: 1px solid #333;
-  border-radius: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  transition: border-color 0.2s;
+  transition: border-color var(--transition);
 }
 
 .wl-input-unit-row:focus-within {
-  border-color: #e53935;
+  border-color: var(--accent);
 }
 
 .wl-set-input {
   flex: 1;
   background: none;
   border: none;
-  color: #ffffff;
-  font-size: 22px;
-  font-weight: 700;
-  padding: 10px 10px;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 900;
+  padding: 12px 10px;
   text-align: center;
   outline: none;
-  width: 0; /* let flex handle sizing */
+  width: 0;
+  letter-spacing: 0.5px;
   -moz-appearance: textfield;
 }
 
@@ -823,22 +997,25 @@
 
 .wl-unit {
   font-size: 11px;
-  font-weight: 600;
-  color: #555;
-  padding: 0 8px 0 0;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding: 0 10px 0 0;
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* ── Delete workout button (history nav header) ────────────── */
 .wl-delete-workout-btn {
   background: none;
   border: none;
-  color: #e53935;
+  color: var(--accent);
+  font-family: var(--font-body);
   font-size: 15px;
   font-weight: 700;
   padding: 0 4px;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: opacity var(--transition);
   flex-shrink: 0;
 }
 
@@ -848,11 +1025,11 @@
 
 /* ── History detail date label ────────────────────────────── */
 .wl-history-date-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #555;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
   padding: 0 2px;
   margin-top: -8px;
 }
@@ -862,24 +1039,19 @@
   width: 100%;
   background: none;
   border: none;
-  color: #555;
+  color: var(--text-muted);
+  font-family: var(--font-body);
   font-size: 13px;
   font-weight: 600;
   padding: 4px 0 8px;
   cursor: pointer;
   text-align: center;
-  transition: color 0.15s;
+  transition: color var(--transition);
   margin-top: -8px;
 }
 
 .wl-delete-set-btn:hover {
-  color: #e53935;
-}
-
-/* ── Set modal scrollable ─────────────────────────────────── */
-.wl-set-modal {
-  max-height: 88vh;
-  overflow-y: auto;
+  color: var(--accent);
 }
 
 /* ── Bodyweight checkbox ──────────────────────────────────── */
@@ -887,15 +1059,16 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  font-family: var(--font-body);
   font-size: 13px;
   font-weight: 600;
-  color: #aaa;
+  color: var(--text-secondary);
   cursor: pointer;
   margin-top: -4px;
 }
 
 .wl-bw-check input[type="checkbox"] {
-  accent-color: #e53935;
+  accent-color: var(--accent);
   width: 16px;
   height: 16px;
   cursor: pointer;
@@ -903,14 +1076,14 @@
 }
 
 .wl-bw-value {
-  color: #555;
+  color: var(--text-muted);
   font-size: 12px;
   font-weight: 400;
 }
 
 /* ── Set modal history ────────────────────────────────────── */
 .wl-modal-history {
-  border-top: 1px solid #252525;
+  border-top: 1px solid var(--border-subtle);
   padding-top: 12px;
   display: flex;
   flex-direction: column;
@@ -922,9 +1095,9 @@
 .wl-modal-history-label {
   font-size: 10px;
   font-weight: 700;
-  color: #444;
+  color: var(--text-hint);
   text-transform: uppercase;
-  letter-spacing: 0.7px;
+  letter-spacing: 1.2px;
 }
 
 .wl-modal-history-row {
@@ -936,7 +1109,7 @@
 .wl-modal-history-date {
   font-size: 11px;
   font-weight: 600;
-  color: #555;
+  color: var(--text-muted);
 }
 
 .wl-modal-history-chips {
@@ -946,51 +1119,53 @@
 }
 
 .wl-modal-history-chip {
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
-  border-radius: 4px;
-  color: #666;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  color: var(--text-muted);
   font-size: 11px;
   font-weight: 600;
-  padding: 2px 6px;
+  padding: 3px 7px;
   white-space: nowrap;
 }
 
 /* ── Exercise stats sheet (active workout) ──────────────────── */
 .wl-ex-sheet {
-  background: #1e1e1e;
-  border: 1px solid #2a2a2a;
-  border-radius: 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
   width: 100%;
   max-width: 400px;
   max-height: 82vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: var(--shadow-modal);
 }
 
 .wl-ex-sheet-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 20px 18px 16px;
-  border-bottom: 1px solid #2a2a2a;
+  padding: 22px 18px 16px;
+  border-bottom: 1px solid var(--border-default);
   flex-shrink: 0;
 }
 
 .wl-ex-sheet-category {
   font-size: 11px;
   font-weight: 700;
-  color: #555;
+  color: var(--accent);
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  margin-bottom: 3px;
+  letter-spacing: 1.2px;
+  margin-bottom: 4px;
 }
 
 .wl-ex-sheet-name {
-  font-size: 20px;
+  font-family: var(--font-display);
+  font-size: 22px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .wl-ex-stats-grid {
@@ -1002,10 +1177,10 @@
 }
 
 .wl-ex-stat-card {
-  background: #151515;
-  border: 1px solid #252525;
-  border-radius: 12px;
-  padding: 14px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 16px 14px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -1014,27 +1189,29 @@
 .wl-ex-stat-label {
   font-size: 10px;
   font-weight: 700;
-  color: #555;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 1.2px;
 }
 
 .wl-ex-stat-value {
-  font-size: 22px;
-  font-weight: 700;
-  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--text-primary);
   line-height: 1.1;
+  letter-spacing: 0.5px;
 }
 
 .wl-ex-stat-unit {
   font-size: 13px;
   font-weight: 500;
-  color: #666;
+  color: var(--text-muted);
 }
 
 .wl-ex-stat-hint {
   font-size: 11px;
-  color: #555;
+  color: var(--text-muted);
 }
 
 .wl-ex-history-section {
@@ -1049,9 +1226,9 @@
 .wl-ex-history-label {
   font-size: 10px;
   font-weight: 700;
-  color: #444;
+  color: var(--text-hint);
   text-transform: uppercase;
-  letter-spacing: 0.7px;
+  letter-spacing: 1.2px;
   flex-shrink: 0;
 }
 
@@ -1064,12 +1241,12 @@
 .wl-ex-history-date {
   font-size: 11px;
   font-weight: 600;
-  color: #555;
+  color: var(--text-muted);
 }
 
 .wl-ex-sheet-note {
   font-size: 13px;
-  color: #444;
+  color: var(--text-hint);
   text-align: center;
   padding: 8px 0;
 }
@@ -1077,18 +1254,19 @@
 .wl-ex-change-btn {
   background: none;
   border: none;
-  border-top: 1px solid #252525;
-  color: #e53935;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--accent);
+  font-family: var(--font-body);
   font-size: 15px;
   font-weight: 700;
-  padding: 16px;
+  padding: 18px;
   cursor: pointer;
   width: 100%;
   text-align: center;
-  transition: background 0.12s;
+  transition: background var(--transition);
   flex-shrink: 0;
 }
 
 .wl-ex-change-btn:hover {
-  background: #252525;
+  background: var(--accent-dim);
 }
