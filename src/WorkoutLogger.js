@@ -167,23 +167,18 @@ function WorkoutLogger({ userId }) {
   // Exercise drag-to-reorder
   const exDragSrc = useRef(null);
 
+  // Template card drag-to-reorder
+  const tmplDragSrc = useRef(null);
+  const [tmplDragOverIdx, setTmplDragOverIdx] = useState(null);
+
   // Template editor: rename
   const [renamingExIdx, setRenamingExIdx] = useState(null);
   const [renameVal,     setRenameVal]     = useState('');
 
-  // Set initial scroll to position 1 (past the prepended clone) when templates first load
-  useEffect(() => {
-    const el = carouselRef.current;
-    if (el && templates.length > 1 && el.scrollLeft === 0) {
-      el.scrollLeft = el.clientWidth;
-    }
-  }, [templates.length]);
-
   function handleCarouselScroll() {
     const el = carouselRef.current;
     if (!el) return;
-    // Real cards start at array index 1, so subtract 1 before modding
-    setActiveCardIdx((Math.round(el.scrollLeft / el.clientWidth) - 1 + templates.length) % templates.length);
+    setActiveCardIdx(Math.round(el.scrollLeft / el.clientWidth));
   }
 
   function handleCarouselMouseDown(e) {
@@ -208,14 +203,18 @@ function WorkoutLogger({ userId }) {
     el.style.cursor = '';
     el.style.userSelect = '';
     const cardWidth = el.clientWidth;
-    const rawIdx = Math.round(el.scrollLeft / cardWidth);
-    el.scrollTo({ left: rawIdx * cardWidth, behavior: 'smooth' });
-    // Teleport after snap animation: clone at end → real first, clone at start → real last
-    if (rawIdx >= templates.length + 1) {
-      setTimeout(() => { if (carouselRef.current) carouselRef.current.scrollLeft = cardWidth; }, 320);
-    } else if (rawIdx <= 0) {
-      setTimeout(() => { if (carouselRef.current) carouselRef.current.scrollLeft = templates.length * cardWidth; }, 320);
-    }
+    el.scrollTo({ left: Math.round(el.scrollLeft / cardWidth) * cardWidth, behavior: 'smooth' });
+  }
+
+  function handleTmplDrop(toIdx) {
+    const fromIdx = tmplDragSrc.current;
+    tmplDragSrc.current = null;
+    setTmplDragOverIdx(null);
+    if (fromIdx === null || fromIdx === toIdx) return;
+    const reordered = [...templates];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    saveTemplates(reordered);
   }
 
   // Template draft
@@ -766,12 +765,21 @@ function WorkoutLogger({ userId }) {
               onMouseUp={handleCarouselMouseUp}
               onMouseLeave={handleCarouselMouseUp}
             >
-              {(templates.length > 1
-                ? [templates[templates.length - 1], ...templates, templates[0]]
-                : templates
-              ).map((t, arrIdx) => (
-                <div key={arrIdx} className="wl-carousel-card">
+              {templates.map((t, i) => (
+                <div
+                  key={t.id}
+                  className={`wl-carousel-card${tmplDragOverIdx === i ? ' drag-over' : ''}`}
+                  onDragOver={e => { e.preventDefault(); setTmplDragOverIdx(i); }}
+                  onDragLeave={() => setTmplDragOverIdx(null)}
+                  onDrop={() => handleTmplDrop(i)}
+                >
                   <div className="wl-carousel-card-header">
+                    <span
+                      className="wl-carousel-card-handle"
+                      draggable
+                      onDragStart={e => { e.stopPropagation(); tmplDragSrc.current = i; }}
+                      onDragEnd={() => { tmplDragSrc.current = null; setTmplDragOverIdx(null); }}
+                    >⠿</span>
                     <div>
                       <p className="wl-carousel-name">{t.name}</p>
                       <p className="wl-carousel-meta">

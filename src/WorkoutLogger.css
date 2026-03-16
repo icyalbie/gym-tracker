@@ -164,6 +164,24 @@
   box-shadow: var(--shadow-card);
 }
 
+.wl-carousel-card.drag-over {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.wl-carousel-card-handle {
+  cursor: grab;
+  color: var(--text-hint);
+  font-size: 16px;
+  opacity: 0.4;
+  user-select: none;
+  flex-shrink: 0;
+  padding-top: 2px;
+  transition: opacity var(--transition);
+}
+
+.wl-carousel-card-handle:hover { opacity: 0.8; }
+
 .wl-carousel-card-header {
   display: flex;
   align-items: flex-start;

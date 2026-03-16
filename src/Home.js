@@ -1,15 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar,
 } from 'recharts';
 import { supabase } from './supabase';
 import './Home.css';
+import './WorkoutLogger.css';
 
 // ── Storage keys ─────────────────────────────────────────────
-const WEIGHT_KEY   = 'gymtracker_weight';
-const CALORIES_KEY = 'gymtracker_calories';
-const WORKOUTS_KEY = 'gymtracker_workouts';
+const WEIGHT_KEY    = 'gymtracker_weight';
+const CALORIES_KEY  = 'gymtracker_calories';
+const WORKOUTS_KEY  = 'gymtracker_workouts';
+const TEMPLATES_KEY = 'gymtracker_templates';
+const ACTIVE_KEY    = 'gymtracker_active_workout';
+
+// ── Category short names ──────────────────────────────────────
+const CAT_SHORT = {
+  'Horizontal Push': 'H.PUSH', 'Vertical Push': 'V.PUSH',
+  'Horizontal Pull': 'H.PULL', 'Vertical Pull': 'V.PULL',
+  'Squat': 'SQUAT', 'Hinge': 'HINGE', 'Carry': 'CARRY',
+  'Accessory': 'ACC.', 'Cardio': 'CARDIO',
+};
+function catShort(cat) {
+  if (CAT_SHORT[cat]) return CAT_SHORT[cat];
+  return cat.length > 8 ? cat.slice(0, 7) + '…' : cat.toUpperCase();
+}
 
 function load(key) {
   try { return JSON.parse(localStorage.getItem(key)) || []; }
@@ -47,6 +62,32 @@ function getLastNDays(n) {
 //   return 'Good Evening';
 // }
 
+function getDisplayWeeks(page) {
+  const today = new Date();
+  const dow = today.getDay();
+  const daysSinceMon = dow === 0 ? 6 : dow - 1;
+  const thisMonday = new Date(today);
+  thisMonday.setHours(0, 0, 0, 0);
+  thisMonday.setDate(today.getDate() - daysSinceMon);
+
+  return Array.from({ length: 4 }, (_, r) => {
+    const weekOffset = page * 4 + (r - 3);
+    const weekStart = new Date(thisMonday);
+    weekStart.setDate(thisMonday.getDate() + weekOffset * 7);
+    return Array.from({ length: 7 }, (_, d) => {
+      const day = new Date(weekStart);
+      day.setDate(weekStart.getDate() + d);
+      return day;
+    });
+  });
+}
+
+function weekRangeLabel(weeks) {
+  const oldest = weeks[0][0];
+  const newest = weeks[3][6];
+  return `${formatDate(localDateKey(oldest))} – ${formatDate(localDateKey(newest))}`;
+}
+
 function getTodayLabel() {
   const now = new Date();
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -76,9 +117,14 @@ const CalTooltip = ({ active, payload }) => {
 };
 
 // ── Component ─────────────────────────────────────────────────
-function Home({ userId }) {
+function Home({ userId, onNavigate }) {
   const isGuest = !userId;
-  const [expandedId, setExpandedId] = useState(null);
+  const [weekPage, setWeekPage] = useState(0);
+  const [selectedDateKey, setSelectedDateKey] = useState(null);
+  const [showStartModal, setShowStartModal] = useState(false);
+  const [modalActiveIdx, setModalActiveIdx] = useState(0);
+  const modalCarouselRef = useRef(null);
+  const modalDragState   = useRef({ isDown: false, startX: 0, scrollLeft: 0 });
 
   // Auth mode: load from Supabase into state
   const [sbWeightEntries, setSbWeightEntries] = useState([]);
@@ -108,6 +154,7 @@ function Home({ userId }) {
   const weightEntries = isGuest ? load(WEIGHT_KEY)   : sbWeightEntries;
   const calorieMeals  = isGuest ? load(CALORIES_KEY) : sbCalorieMeals;
   const workouts      = isGuest ? load(WORKOUTS_KEY) : sbWorkouts;
+  const templates     = isGuest ? load(TEMPLATES_KEY) : [];
 
   const todayKey = getTodayKey();
 
@@ -136,10 +183,52 @@ function Home({ userId }) {
   const todayCals  = calTotals[todayKey] || 0;
   const hasCalData = calChartData.some(d => d.calories > 0);
 
-  // ── Workout history ───────────────────────────────────────
-  function toggleWorkout(id) {
-    setExpandedId(prev => prev === id ? null : id);
+  // ── Modal carousel handlers ───────────────────────────────
+  function handleModalScroll() {
+    const el = modalCarouselRef.current;
+    if (!el) return;
+    setModalActiveIdx(Math.round(el.scrollLeft / el.clientWidth));
   }
+  function handleModalMouseDown(e) {
+    const el = modalCarouselRef.current;
+    if (!el) return;
+    modalDragState.current = { isDown: true, startX: e.pageX, scrollLeft: el.scrollLeft };
+    el.style.cursor = 'grabbing';
+    el.style.userSelect = 'none';
+  }
+  function handleModalMouseMove(e) {
+    const el = modalCarouselRef.current;
+    if (!el || !modalDragState.current.isDown) return;
+    e.preventDefault();
+    el.scrollLeft = modalDragState.current.scrollLeft - (e.pageX - modalDragState.current.startX);
+  }
+  function handleModalMouseUp() {
+    const el = modalCarouselRef.current;
+    if (!el || !modalDragState.current.isDown) return;
+    modalDragState.current.isDown = false;
+    el.style.cursor = '';
+    el.style.userSelect = '';
+    const cardWidth = el.clientWidth;
+    el.scrollTo({ left: Math.round(el.scrollLeft / cardWidth) * cardWidth, behavior: 'smooth' });
+  }
+  function startFromTemplate(template) {
+    const active = {
+      templateId: template.id,
+      name: template.name,
+      startedAt: new Date().toISOString(),
+      exercises: template.exercises.map(e => ({ ...e, sets: [] })),
+    };
+    localStorage.setItem(ACTIVE_KEY, JSON.stringify(active));
+    setShowStartModal(false);
+    onNavigate('workout');
+  }
+
+  // ── Workout calendar ──────────────────────────────────────
+  const workoutByDate = {};
+  for (const wo of workouts) {
+    if (wo.date && !workoutByDate[wo.date]) workoutByDate[wo.date] = wo;
+  }
+  const displayWeeks = getDisplayWeeks(weekPage);
 
   return (
     <div className="home">
@@ -260,50 +349,118 @@ function Home({ userId }) {
         )}
       </div>
 
-      {/* Workout history */}
-      {workouts.length > 0 && (
-        <div className="h-section">
-          <p className="h-section-title">Recent Workouts</p>
-          <div className="h-workout-list">
-            {workouts.slice(0, 10).map(workout => {
-              const isExpanded = expandedId === workout.id;
-              const totalSets  = workout.exercises.reduce((n, e) => n + e.sets.length, 0);
-              return (
-                <div key={workout.id} className="h-workout-item">
-                  <button
-                    className="h-workout-row"
-                    onClick={() => toggleWorkout(workout.id)}
-                  >
-                    <div className="h-workout-info">
-                      <p className="h-workout-name">{workout.name}</p>
-                      <p className="h-workout-meta">
-                        {formatDate(workout.date)}
-                        {' · '}{workout.exercises.length} exercise{workout.exercises.length !== 1 ? 's' : ''}
-                        {' · '}{totalSets} set{totalSets !== 1 ? 's' : ''}
-                      </p>
-                    </div>
-                    <span className={`h-chevron${isExpanded ? ' open' : ''}`}>›</span>
-                  </button>
+      {/* Workout calendar */}
+      <div className="h-section">
+        <div className="h-cal-header">
+          <div>
+            <p className="h-section-title">Workouts</p>
+            <p className="h-cal-range">{weekRangeLabel(displayWeeks)}</p>
+          </div>
+          <div className="h-cal-nav">
+            <button className="h-cal-nav-btn" onClick={() => { setWeekPage(p => p - 1); setSelectedDateKey(null); }}>←</button>
+            {weekPage < 0 && (
+              <button className="h-cal-nav-btn" onClick={() => { setWeekPage(p => p + 1); setSelectedDateKey(null); }}>→</button>
+            )}
+          </div>
+        </div>
 
-                  {isExpanded && (
-                    <div className="h-workout-detail">
-                      {workout.exercises.map((ex, i) => (
-                        <div key={i} className="h-ex-row">
-                          <span className="h-ex-name">{ex.name}</span>
-                          <div className="h-ex-chips">
-                            {ex.sets.length > 0
-                              ? ex.sets.map((s, j) => (
-                                  <span key={j} className="h-ex-chip">{s.weight}×{s.reps}</span>
-                                ))
-                              : <span className="h-ex-empty">No sets</span>}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+        <div className="h-cal-grid">
+          {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => (
+            <div key={d} className="h-cal-dow">{d}</div>
+          ))}
+          {displayWeeks.map((week) =>
+            week.map((day) => {
+              const dk = localDateKey(day);
+              const wo = workoutByDate[dk];
+              const isToday = dk === todayKey;
+              const isFuture = day > new Date() && !isToday;
+              const isSelected = selectedDateKey === dk;
+              const cls = ['h-cal-cell', wo ? 'has-workout' : '', isToday ? 'today' : '', isFuture ? 'future' : '', isSelected ? 'selected' : ''].filter(Boolean).join(' ');
+              return (
+                <div key={dk} className={cls} onClick={isToday ? () => setShowStartModal(true) : wo ? () => setSelectedDateKey(isSelected ? null : dk) : undefined}>
+                  <span className="h-cal-date">{day.getDate()}</span>
+                  {wo && <span className="h-cal-wo-name">{wo.name}</span>}
                 </div>
               );
-            })}
+            })
+          )}
+        </div>
+
+        {selectedDateKey && workoutByDate[selectedDateKey] && (() => {
+          const wo = workoutByDate[selectedDateKey];
+          const totalSets = wo.exercises.reduce((n, e) => n + e.sets.length, 0);
+          return (
+            <div className="h-cal-detail">
+              <p className="h-cal-detail-title">
+                {wo.name}
+                <span className="h-cal-detail-meta"> · {formatDate(wo.date)} · {wo.exercises.length} exercise{wo.exercises.length !== 1 ? 's' : ''} · {totalSets} set{totalSets !== 1 ? 's' : ''}</span>
+              </p>
+              {wo.exercises.map((ex, i) => (
+                <div key={i} className="h-ex-row">
+                  <span className="h-ex-name">{ex.name}</span>
+                  <div className="h-ex-chips">
+                    {ex.sets.length > 0
+                      ? ex.sets.map((s, j) => <span key={j} className="h-ex-chip">{s.weight}×{s.reps}</span>)
+                      : <span className="h-ex-empty">No sets</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+      </div>
+
+      {showStartModal && (
+        <div className="h-modal-overlay" onClick={() => setShowStartModal(false)}>
+          <div className="h-modal" onClick={e => e.stopPropagation()}>
+            <div className="h-modal-header">
+              <p className="h-modal-title">Start Workout</p>
+              <button className="h-modal-close" onClick={() => setShowStartModal(false)}>✕</button>
+            </div>
+            {templates.length === 0 ? (
+              <p className="wl-empty-text">No templates yet — create one on the Workout page.</p>
+            ) : (
+              <div className="wl-carousel-wrap">
+                <div
+                  className="wl-carousel"
+                  ref={modalCarouselRef}
+                  onScroll={handleModalScroll}
+                  onMouseDown={handleModalMouseDown}
+                  onMouseMove={handleModalMouseMove}
+                  onMouseUp={handleModalMouseUp}
+                  onMouseLeave={handleModalMouseUp}
+                >
+                  {templates.map((t) => (
+                    <div key={t.id} className="wl-carousel-card">
+                      <div className="wl-carousel-card-header">
+                        <div>
+                          <p className="wl-carousel-name">{t.name}</p>
+                          <p className="wl-carousel-meta">{t.exercises.length} exercise{t.exercises.length !== 1 ? 's' : ''}</p>
+                        </div>
+                      </div>
+                      <div className="wl-carousel-exercises">
+                        {t.exercises.map((ex, j) => (
+                          <div key={j} className="wl-carousel-ex-row">
+                            <span className="wl-carousel-ex-cat">{catShort(ex.category)}</span>
+                            <span className="wl-carousel-ex-name">{ex.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <button className="wl-carousel-start-btn" onClick={() => startFromTemplate(t)}>
+                        Start Workout
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                {templates.length > 1 && (
+                  <div className="wl-carousel-dots">
+                    {templates.map((_, i) => (
+                      <div key={i} className={`wl-carousel-dot${i === modalActiveIdx ? ' active' : ''}`} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

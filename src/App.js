@@ -269,7 +269,7 @@ function App() {
       </header>
 
       <main className="app-main">
-        {currentPage === 'home'      && <Home         userId={userId} />}
+        {currentPage === 'home'      && <Home         userId={userId} onNavigate={setCurrentPage} />}
         {currentPage === 'workout'   && <WorkoutLogger userId={userId} />}
         {currentPage === 'exercises' && <Exercises     userId={userId} />}
         {currentPage === 'weight'    && <WeightLogger  userId={userId} />}
