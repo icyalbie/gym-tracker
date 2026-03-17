@@ -272,6 +272,21 @@
 }
 
 /* ── Workout Calendar ───────────────────────────────────────── */
+.h-cal-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 14px 14px 12px;
+  box-shadow: var(--shadow-card);
+}
+
+.h-cal-scroll {
+  overflow: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.h-cal-scroll::-webkit-scrollbar { display: none; }
+
 .h-cal-header {
   display: flex;
   align-items: flex-start;
@@ -312,6 +327,7 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
+  min-width: calc(7 * 40px + 6 * 4px);
 }
 
 .h-cal-dow {
@@ -325,7 +341,8 @@
 }
 
 .h-cal-cell {
-  min-height: 52px;
+  height: 52px;
+  overflow: hidden;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;

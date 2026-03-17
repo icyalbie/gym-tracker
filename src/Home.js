@@ -26,6 +26,10 @@ function catShort(cat) {
   return cat.length > 8 ? cat.slice(0, 7) + '…' : cat.toUpperCase();
 }
 
+function initials(name) {
+  return name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase();
+}
+
 function load(key) {
   try { return JSON.parse(localStorage.getItem(key)) || []; }
   catch { return []; }
@@ -154,7 +158,7 @@ function Home({ userId, onNavigate }) {
   const weightEntries = isGuest ? load(WEIGHT_KEY)   : sbWeightEntries;
   const calorieMeals  = isGuest ? load(CALORIES_KEY) : sbCalorieMeals;
   const workouts      = isGuest ? load(WORKOUTS_KEY) : sbWorkouts;
-  const templates     = isGuest ? load(TEMPLATES_KEY) : [];
+  const templates     = load(TEMPLATES_KEY);
 
   const todayKey = getTodayKey();
 
@@ -232,6 +236,70 @@ function Home({ userId, onNavigate }) {
 
   return (
     <div className="home">
+
+      {/* Workout calendar */}
+      <div className="h-section">
+        <div className="h-cal-box">
+          <div className="h-cal-header">
+            <div>
+              <p className="h-section-title">Workouts</p>
+              <p className="h-cal-range">{weekRangeLabel(displayWeeks)}</p>
+            </div>
+            <div className="h-cal-nav">
+              <button className="h-cal-nav-btn" onClick={() => { setWeekPage(p => p - 1); setSelectedDateKey(null); }}>←</button>
+              {weekPage < 0 && (
+                <button className="h-cal-nav-btn" onClick={() => { setWeekPage(p => p + 1); setSelectedDateKey(null); }}>→</button>
+              )}
+            </div>
+          </div>
+          <div className="h-cal-scroll">
+        <div className="h-cal-grid">
+          {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => (
+            <div key={d} className="h-cal-dow">{d}</div>
+          ))}
+          {displayWeeks.map((week) =>
+            week.map((day) => {
+              const dk = localDateKey(day);
+              const wo = workoutByDate[dk];
+              const isToday = dk === todayKey;
+              const isFuture = day > new Date() && !isToday;
+              const isSelected = selectedDateKey === dk;
+              const cls = ['h-cal-cell', wo ? 'has-workout' : '', isToday ? 'today' : '', isFuture ? 'future' : '', isSelected ? 'selected' : ''].filter(Boolean).join(' ');
+              return (
+                <div key={dk} className={cls} onClick={isToday ? () => setShowStartModal(true) : wo ? () => setSelectedDateKey(isSelected ? null : dk) : undefined}>
+                  <span className="h-cal-date">{day.getDate()}</span>
+                  {wo && <span className="h-cal-wo-name">{initials(wo.name)}</span>}
+                </div>
+              );
+            })
+          )}
+        </div>
+          </div>{/* h-cal-scroll */}
+        </div>{/* h-cal-box */}
+
+        {selectedDateKey && workoutByDate[selectedDateKey] && (() => {
+          const wo = workoutByDate[selectedDateKey];
+          const totalSets = wo.exercises.reduce((n, e) => n + e.sets.length, 0);
+          return (
+            <div className="h-cal-detail">
+              <p className="h-cal-detail-title">
+                {wo.name}
+                <span className="h-cal-detail-meta"> · {formatDate(wo.date)} · {wo.exercises.length} exercise{wo.exercises.length !== 1 ? 's' : ''} · {totalSets} set{totalSets !== 1 ? 's' : ''}</span>
+              </p>
+              {wo.exercises.map((ex, i) => (
+                <div key={i} className="h-ex-row">
+                  <span className="h-ex-name">{ex.name}</span>
+                  <div className="h-ex-chips">
+                    {ex.sets.length > 0
+                      ? ex.sets.map((s, j) => <span key={j} className="h-ex-chip">{s.weight}×{s.reps}</span>)
+                      : <span className="h-ex-empty">No sets</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+      </div>
 
       {/* Greeting */}
       <div className="greeting">
@@ -347,67 +415,6 @@ function Home({ userId, onNavigate }) {
             </ResponsiveContainer>
           </div>
         )}
-      </div>
-
-      {/* Workout calendar */}
-      <div className="h-section">
-        <div className="h-cal-header">
-          <div>
-            <p className="h-section-title">Workouts</p>
-            <p className="h-cal-range">{weekRangeLabel(displayWeeks)}</p>
-          </div>
-          <div className="h-cal-nav">
-            <button className="h-cal-nav-btn" onClick={() => { setWeekPage(p => p - 1); setSelectedDateKey(null); }}>←</button>
-            {weekPage < 0 && (
-              <button className="h-cal-nav-btn" onClick={() => { setWeekPage(p => p + 1); setSelectedDateKey(null); }}>→</button>
-            )}
-          </div>
-        </div>
-
-        <div className="h-cal-grid">
-          {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => (
-            <div key={d} className="h-cal-dow">{d}</div>
-          ))}
-          {displayWeeks.map((week) =>
-            week.map((day) => {
-              const dk = localDateKey(day);
-              const wo = workoutByDate[dk];
-              const isToday = dk === todayKey;
-              const isFuture = day > new Date() && !isToday;
-              const isSelected = selectedDateKey === dk;
-              const cls = ['h-cal-cell', wo ? 'has-workout' : '', isToday ? 'today' : '', isFuture ? 'future' : '', isSelected ? 'selected' : ''].filter(Boolean).join(' ');
-              return (
-                <div key={dk} className={cls} onClick={isToday ? () => setShowStartModal(true) : wo ? () => setSelectedDateKey(isSelected ? null : dk) : undefined}>
-                  <span className="h-cal-date">{day.getDate()}</span>
-                  {wo && <span className="h-cal-wo-name">{wo.name}</span>}
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        {selectedDateKey && workoutByDate[selectedDateKey] && (() => {
-          const wo = workoutByDate[selectedDateKey];
-          const totalSets = wo.exercises.reduce((n, e) => n + e.sets.length, 0);
-          return (
-            <div className="h-cal-detail">
-              <p className="h-cal-detail-title">
-                {wo.name}
-                <span className="h-cal-detail-meta"> · {formatDate(wo.date)} · {wo.exercises.length} exercise{wo.exercises.length !== 1 ? 's' : ''} · {totalSets} set{totalSets !== 1 ? 's' : ''}</span>
-              </p>
-              {wo.exercises.map((ex, i) => (
-                <div key={i} className="h-ex-row">
-                  <span className="h-ex-name">{ex.name}</span>
-                  <div className="h-ex-chips">
-                    {ex.sets.length > 0
-                      ? ex.sets.map((s, j) => <span key={j} className="h-ex-chip">{s.weight}×{s.reps}</span>)
-                      : <span className="h-ex-empty">No sets</span>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          );
-        })()}
       </div>
 
       {showStartModal && (
