@@ -115,7 +115,7 @@ function getExSessions(ex, workouts) {
   return sessions.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
 }
 
-function computeExStats(ex, workouts) {
+function computeExStats(ex, workouts, weightEntries) {
   const sessions = [];
   const allSets  = [];
   for (const wo of workouts) {
@@ -123,14 +123,28 @@ function computeExStats(ex, workouts) {
       (ex.exerciseId && e.exerciseId === ex.exerciseId) || e.name === ex.name
     );
     if (found && found.sets?.length > 0) {
-      sessions.push({ date: wo.date, workoutName: wo.name, sets: found.sets });
-      allSets.push(...found.sets);
+      if (ex.bodyweight) {
+        const bw = getBodyweightForDate(wo.date, weightEntries ?? []);
+        const effectiveSets = found.sets.map(s => ({
+          weight: bw !== null ? Math.round((bw + s.weight) * 100) / 100 : s.weight,
+          reps: s.reps,
+          bw: bw !== null ? bw : undefined,
+          extra: s.weight,
+        }));
+        sessions.push({ date: wo.date, workoutName: wo.name, sets: effectiveSets });
+        allSets.push(...effectiveSets);
+      } else {
+        sessions.push({ date: wo.date, workoutName: wo.name, sets: found.sets });
+        allSets.push(...found.sets);
+      }
     }
   }
   sessions.sort((a, b) => b.date.localeCompare(a.date));
 
   const oneRepSets = allSets.filter(s => s.reps === 1);
-  const oneRM = oneRepSets.length > 0 ? Math.max(...oneRepSets.map(s => s.weight)) : null;
+  const oneRM = oneRepSets.length > 0
+    ? oneRepSets.reduce((best, s) => s.weight > best.weight ? s : best)
+    : null;
 
   const repPRSets = allSets.filter(s => s.reps >= 3);
   const repPR = repPRSets.length > 0
@@ -178,13 +192,20 @@ function WorkoutLogger({ userId }) {
   function handleCarouselScroll() {
     const el = carouselRef.current;
     if (!el) return;
-    setActiveCardIdx(Math.round(el.scrollLeft / el.clientWidth));
+    const cards = el.querySelectorAll('.wl-carousel-card');
+    let closest = 0, minDist = Infinity;
+    cards.forEach((card, i) => {
+      const dist = Math.abs(card.offsetLeft - el.scrollLeft);
+      if (dist < minDist) { minDist = dist; closest = i; }
+    });
+    setActiveCardIdx(closest);
   }
 
   function handleCarouselMouseDown(e) {
     const el = carouselRef.current;
     if (!el) return;
     dragState.current = { isDown: true, startX: e.pageX, scrollLeft: el.scrollLeft };
+    el.style.scrollSnapType = 'none';
     el.style.cursor = 'grabbing';
     el.style.userSelect = 'none';
   }
@@ -200,10 +221,16 @@ function WorkoutLogger({ userId }) {
     const el = carouselRef.current;
     if (!el || !dragState.current.isDown) return;
     dragState.current.isDown = false;
+    el.style.scrollSnapType = '';
     el.style.cursor = '';
     el.style.userSelect = '';
-    const cardWidth = el.clientWidth;
-    el.scrollTo({ left: Math.round(el.scrollLeft / cardWidth) * cardWidth, behavior: 'smooth' });
+    const cards = el.querySelectorAll('.wl-carousel-card');
+    let snapLeft = 0, minDist = Infinity;
+    cards.forEach(card => {
+      const dist = Math.abs(card.offsetLeft - el.scrollLeft);
+      if (dist < minDist) { minDist = dist; snapLeft = card.offsetLeft; }
+    });
+    el.scrollTo({ left: snapLeft, behavior: 'smooth' });
   }
 
   function handleTmplDrop(toIdx) {
@@ -227,10 +254,11 @@ function WorkoutLogger({ userId }) {
   const [showPicker,    setShowPicker]    = useState(false);
   const [pickerTarget,  setPickerTarget]  = useState(null);
   const [pickerSearch,  setPickerSearch]  = useState('');
-  const [showNewExForm, setShowNewExForm] = useState(false);
-  const [newExName,     setNewExName]     = useState('');
-  const [categories,    setCategories]    = useState(loadCategories);
-  const [newExCategory, setNewExCategory] = useState(() => loadCategories()[0]);
+  const [showNewExForm,    setShowNewExForm]    = useState(false);
+  const [newExName,        setNewExName]        = useState('');
+  const [categories,       setCategories]       = useState(loadCategories);
+  const [newExCategory,    setNewExCategory]    = useState(() => loadCategories()[0]);
+  const [newExBodyweight,  setNewExBodyweight]  = useState(false);
 
   // Exercise stats sheet (active workout)
   const [activeExSheet, setActiveExSheet] = useState(null); // exIdx | null
@@ -239,13 +267,11 @@ function WorkoutLogger({ userId }) {
   const [addSetModal, setAddSetModal] = useState(null);
   const [addSetW,     setAddSetW]     = useState('');
   const [addSetR,     setAddSetR]     = useState('');
-  const [addSetBW,    setAddSetBW]    = useState(false);
 
   // Edit-set modal
   const [editSetCtx, setEditSetCtx] = useState(null);
   const [editSetW,   setEditSetW]   = useState('');
   const [editSetR,   setEditSetR]   = useState('');
-  const [editSetBW,  setEditSetBW]  = useState(false);
 
   // ── Load from Supabase ──────────────────────────────────────
   useEffect(() => {
@@ -263,10 +289,10 @@ function WorkoutLogger({ userId }) {
           .insert(DEFAULT_EXERCISES.map(e => ({ user_id: userId, name: e.name, category: e.category })))
           .select()
           .then(({ data }) => {
-            if (data) setExercises(data.map(e => ({ id: e.id, name: e.name, category: e.category })));
+            if (data) setExercises(data.map(e => ({ id: e.id, name: e.name, category: e.category, bodyweight: e.bodyweight ?? false })));
           });
       } else {
-        setExercises(exData.map(e => ({ id: e.id, name: e.name, category: e.category })));
+        setExercises(exData.map(e => ({ id: e.id, name: e.name, category: e.category, bodyweight: e.bodyweight ?? false })));
       }
 
       setTemplates((tmplRes.data ?? []).map(t => ({ id: t.id, name: t.name, exercises: t.exercises })));
@@ -341,6 +367,25 @@ function WorkoutLogger({ userId }) {
     setRenamingExIdx(null);
   }
 
+  async function handleRenameExercise(exIdx, newName) {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    const ex = activeWorkout.exercises[exIdx];
+    const newExercises = activeWorkout.exercises.map((e, i) =>
+      i === exIdx ? { ...e, name: trimmed } : e
+    );
+    saveActive({ ...activeWorkout, exercises: newExercises });
+    syncTemplateExercises(newExercises);
+    if (ex.exerciseId) {
+      if (isGuest) {
+        saveExercises(exercises.map(e => e.id === ex.exerciseId ? { ...e, name: trimmed } : e));
+      } else {
+        await supabase.from('exercises').update({ name: trimmed }).eq('id', ex.exerciseId);
+        setExercises(prev => prev.map(e => e.id === ex.exerciseId ? { ...e, name: trimmed } : e));
+      }
+    }
+  }
+
   // ── Template creation / editing ────────────────────────────
   function openCreate() {
     setEditTmplId(null); setDraftName(''); setDraftExercises([]); setView('create');
@@ -411,7 +456,7 @@ function WorkoutLogger({ userId }) {
     if (pickerTarget?.action === 'swap') {
       const newExercises = activeWorkout.exercises.map((e, i) =>
         i === pickerTarget.idx
-          ? { exerciseId: ex.id, name: ex.name, category: ex.category, sets: e.sets }
+          ? { exerciseId: ex.id, name: ex.name, category: ex.category, bodyweight: ex.bodyweight ?? false, sets: e.sets }
           : e
       );
       const newActive = { ...activeWorkout, exercises: newExercises };
@@ -420,14 +465,14 @@ function WorkoutLogger({ userId }) {
     } else if (pickerTarget?.action === 'add') {
       const newExercises = [
         ...activeWorkout.exercises,
-        { exerciseId: ex.id, name: ex.name, category: ex.category, sets: [] },
+        { exerciseId: ex.id, name: ex.name, category: ex.category, bodyweight: ex.bodyweight ?? false, sets: [] },
       ];
       const newActive = { ...activeWorkout, exercises: newExercises };
       saveActive(newActive);
       syncTemplateExercises(newExercises);
     } else {
       // template editor
-      setDraftExercises(prev => [...prev, { exerciseId: ex.id, name: ex.name, category: ex.category }]);
+      setDraftExercises(prev => [...prev, { exerciseId: ex.id, name: ex.name, category: ex.category, bodyweight: ex.bodyweight ?? false }]);
     }
     setShowPicker(false);
   }
@@ -437,20 +482,20 @@ function WorkoutLogger({ userId }) {
     if (!name) return;
 
     if (isGuest) {
-      const ex = { id: `custom-${Date.now()}`, name, category: newExCategory, custom: true };
+      const ex = { id: `custom-${Date.now()}`, name, category: newExCategory, bodyweight: newExBodyweight, custom: true };
       saveExercises([...exercises, ex]);
       handlePickerSelect(ex);
     } else {
       const { data } = await supabase.from('exercises')
-        .insert({ user_id: userId, name, category: newExCategory })
+        .insert({ user_id: userId, name, category: newExCategory, bodyweight: newExBodyweight })
         .select().single();
       if (data) {
-        const ex = { id: data.id, name: data.name, category: data.category };
+        const ex = { id: data.id, name: data.name, category: data.category, bodyweight: data.bodyweight ?? false };
         setExercises(prev => [...prev, ex]);
         handlePickerSelect(ex);
       }
     }
-    setNewExName(''); setShowNewExForm(false);
+    setNewExName(''); setNewExBodyweight(false); setShowNewExForm(false);
   }
 
   const filteredExercises = pickerSearch.trim()
@@ -470,7 +515,10 @@ function WorkoutLogger({ userId }) {
       templateId: template.id,
       name: template.name,
       startedAt: new Date().toISOString(),
-      exercises: template.exercises.map(e => ({ ...e, sets: [] })),
+      exercises: template.exercises.map(e => {
+        const libEx = exercises.find(x => (e.exerciseId && x.id === e.exerciseId) || x.name === e.name);
+        return { ...e, bodyweight: e.bodyweight ?? libEx?.bodyweight ?? false, sets: [] };
+      }),
     });
     setView('workout');
   }
@@ -509,7 +557,7 @@ function WorkoutLogger({ userId }) {
   // ── Add set ────────────────────────────────────────────────
   function openAddSet(source, exIdx) {
     setAddSetModal({ source, exIdx });
-    setAddSetW(''); setAddSetR(''); setAddSetBW(false);
+    setAddSetW(''); setAddSetR('');
   }
 
   function handleAddSet() {
@@ -518,14 +566,7 @@ function WorkoutLogger({ userId }) {
     if (isNaN(w) || isNaN(r) || w < 0 || r < 1) return;
     const { source, exIdx } = addSetModal;
 
-    let finalWeight = w;
-    if (addSetBW) {
-      const workoutDate = source === 'active' ? localDateKey() : selectedWorkout.date;
-      const bw = getBodyweightForDate(workoutDate, weightEntries);
-      if (bw !== null) finalWeight = Math.round((w + bw) * 100) / 100;
-    }
-
-    const newSet = { weight: finalWeight, reps: r };
+    const newSet = { weight: w, reps: r };
     if (source === 'active') {
       saveActive({
         ...activeWorkout,
@@ -546,7 +587,6 @@ function WorkoutLogger({ userId }) {
     setEditSetCtx({ source, exIdx, setIdx });
     setEditSetW(String(s.weight));
     setEditSetR(String(s.reps));
-    setEditSetBW(false);
   }
 
   function handleSaveEditSet() {
@@ -555,14 +595,7 @@ function WorkoutLogger({ userId }) {
     if (isNaN(w) || isNaN(r) || w < 0 || r < 1) return;
     const { source, exIdx, setIdx } = editSetCtx;
 
-    let finalWeight = w;
-    if (editSetBW) {
-      const workoutDate = source === 'active' ? localDateKey() : selectedWorkout.date;
-      const bw = getBodyweightForDate(workoutDate, weightEntries);
-      if (bw !== null) finalWeight = Math.round((w + bw) * 100) / 100;
-    }
-
-    const newSet = { weight: finalWeight, reps: r };
+    const newSet = { weight: w, reps: r };
     if (source === 'active') {
       saveActive({
         ...activeWorkout,
@@ -640,8 +673,9 @@ function WorkoutLogger({ userId }) {
   }
 
   // ── Shared: workout table rows ─────────────────────────────
-  function WorkoutTable({ workout, source }) {
+  function WorkoutTable({ workout, source, workoutDate }) {
     const draggable = source === 'active';
+    const bw = getBodyweightForDate(workoutDate, weightEntries);
     return (
       <div className="wl-table-card">
         <div className={`wl-table-head workout-head${draggable ? ' with-handle' : ''}`}>
@@ -672,7 +706,12 @@ function WorkoutLogger({ userId }) {
                   className="wl-set-chip"
                   onClick={() => openEditSet(source, i, j)}
                 >
-                  {s.weight}×{s.reps}
+                  {ex.bodyweight
+                    ? (bw !== null
+                        ? (s.weight > 0 ? `${bw}+${s.weight}kg` : `${bw}kg`)
+                        : (s.weight > 0 ? `BW+${s.weight}kg`    : 'BW')
+                      ) + `×${s.reps}`
+                    : `${s.weight}×${s.reps}`}
                 </button>
               ))}
               <button className="wl-add-set-btn" onClick={() => openAddSet(source, i)}>+</button>
@@ -699,9 +738,8 @@ function WorkoutLogger({ userId }) {
     r: addSetR, setR: setAddSetR,
     onClose: () => setAddSetModal(null),
     onAdd: handleAddSet,
-    workouts, weightEntries,
+    workouts,
     workoutDate: addSetWorkoutDate,
-    addBW: addSetBW, setAddBW: setAddSetBW,
   };
   const editSetModalProps = {
     ctx: editSetCtx,
@@ -710,9 +748,8 @@ function WorkoutLogger({ userId }) {
     onClose: () => setEditSetCtx(null),
     onSave: handleSaveEditSet,
     onDelete: handleDeleteSet,
-    workouts, weightEntries,
+    workouts,
     workoutDate: editSetWorkoutDate,
-    editBW: editSetBW, setEditBW: setEditSetBW,
   };
   const pickerModalProps = {
     show: showPicker,
@@ -721,6 +758,7 @@ function WorkoutLogger({ userId }) {
     showNewExForm, setShowNewExForm,
     newExName, setNewExName,
     newExCategory, setNewExCategory,
+    newExBodyweight, setNewExBodyweight,
     categories,
     onClose: () => setShowPicker(false),
     onSelect: handlePickerSelect,
@@ -734,8 +772,8 @@ function WorkoutLogger({ userId }) {
     <div className="wl-page">
       <div className="wl-page-header">
         <div>
-          <p className="wl-sub">Your workouts</p>
-          <h2 className="wl-title">Workout</h2>
+          {/* <p className="wl-sub">Your workouts</p> */}
+          <h2 className="wl-title">Workouts</h2>
         </div>
         <button className="wl-add-btn" onClick={openCreate}>+</button>
       </div>
@@ -839,7 +877,7 @@ function WorkoutLogger({ userId }) {
 
                   {isExpanded && (
                     <div className="wl-history-expanded">
-                      <WorkoutTable workout={wo} source="history" />
+                      <WorkoutTable workout={wo} source="history" workoutDate={wo.date} />
                       <button className="wl-abandon-btn" onClick={handleDeleteWorkout}>
                         Delete Workout
                       </button>
@@ -952,7 +990,7 @@ function WorkoutLogger({ userId }) {
         <button className="wl-finish-btn" onClick={handleFinishWorkout}>Finish</button>
       </div>
 
-      <WorkoutTable workout={activeWorkout} source="active" />
+      <WorkoutTable workout={activeWorkout} source="active" workoutDate={localDateKey()} />
 
       <button className="wl-add-exercise-btn" onClick={() => openPicker({ action: 'add' })}>
         + Add Exercise
@@ -967,7 +1005,9 @@ function WorkoutLogger({ userId }) {
         exIdx={activeExSheet}
         workout={activeWorkout}
         workouts={workouts}
+        weightEntries={weightEntries}
         onClose={() => setActiveExSheet(null)}
+        onRename={(idx, name) => handleRenameExercise(idx, name)}
         onSwap={idx => {
           setActiveExSheet(null);
           openPicker({ action: 'swap', idx });
@@ -985,12 +1025,20 @@ function WorkoutLogger({ userId }) {
 
 // ── Exercise stats sheet (shown when tapping exercise in active workout) ──
 
-function ExerciseStatsSheet({ exIdx, workout, workouts, onClose, onSwap }) {
+function ExerciseStatsSheet({ exIdx, workout, workouts, weightEntries, onClose, onRename, onSwap }) {
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renameVal,  setRenameVal]  = useState('');
+
   if (exIdx === null || exIdx === undefined || !workout) return null;
   const ex = workout.exercises[exIdx];
   if (!ex) return null;
 
-  const { sessions, oneRM, repPR } = computeExStats(ex, workouts);
+  const { sessions, oneRM, repPR } = computeExStats(ex, workouts, weightEntries);
+
+  function commitRename() {
+    if (renameVal.trim()) onRename(exIdx, renameVal.trim());
+    setIsRenaming(false);
+  }
 
   return (
     <div className="wl-overlay" onClick={onClose}>
@@ -998,7 +1046,22 @@ function ExerciseStatsSheet({ exIdx, workout, workouts, onClose, onSwap }) {
         <div className="wl-ex-sheet-header">
           <div>
             <p className="wl-ex-sheet-category">{ex.category}</p>
-            <h3 className="wl-ex-sheet-name">{ex.name}</h3>
+            {isRenaming ? (
+              <input
+                className="wl-rename-input"
+                value={renameVal}
+                autoFocus
+                onChange={e => setRenameVal(e.target.value)}
+                onBlur={commitRename}
+                onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') setIsRenaming(false); }}
+              />
+            ) : (
+              <h3
+                className="wl-ex-sheet-name wl-cell-name-tap"
+                onClick={() => { setRenameVal(ex.name); setIsRenaming(true); }}
+                title="Tap to rename"
+              >{ex.name}</h3>
+            )}
           </div>
           <button className="wl-picker-close" onClick={onClose}>✕</button>
         </div>
@@ -1008,7 +1071,10 @@ function ExerciseStatsSheet({ exIdx, workout, workouts, onClose, onSwap }) {
             <p className="wl-ex-stat-label">1RM</p>
             {oneRM !== null ? (
               <>
-                <p className="wl-ex-stat-value">{oneRM}<span className="wl-ex-stat-unit"> kg</span></p>
+                <p className="wl-ex-stat-value">
+                  {oneRM.bw !== undefined ? `${oneRM.bw}+${oneRM.extra}` : oneRM.weight}
+                  <span className="wl-ex-stat-unit"> kg</span>
+                </p>
                 <p className="wl-ex-stat-hint">Heaviest single rep</p>
               </>
             ) : (
@@ -1022,7 +1088,10 @@ function ExerciseStatsSheet({ exIdx, workout, workouts, onClose, onSwap }) {
             <p className="wl-ex-stat-label">Rep PR</p>
             {repPR !== null ? (
               <>
-                <p className="wl-ex-stat-value">{repPR.weight}<span className="wl-ex-stat-unit"> kg</span></p>
+                <p className="wl-ex-stat-value">
+                  {repPR.bw !== undefined ? `${repPR.bw}+${repPR.extra}` : repPR.weight}
+                  <span className="wl-ex-stat-unit"> kg</span>
+                </p>
                 <p className="wl-ex-stat-hint">× {repPR.reps} reps</p>
               </>
             ) : (
@@ -1045,7 +1114,9 @@ function ExerciseStatsSheet({ exIdx, workout, workouts, onClose, onSwap }) {
                   </p>
                   <div className="wl-modal-history-chips">
                     {session.sets.map((s, j) => (
-                      <span key={j} className="wl-modal-history-chip">{s.weight}×{s.reps}</span>
+                      <span key={j} className="wl-modal-history-chip">
+                        {s.bw !== undefined ? `${s.bw}+${s.extra}` : s.weight}×{s.reps}
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -1069,7 +1140,8 @@ function ExerciseStatsSheet({ exIdx, workout, workouts, onClose, onSwap }) {
 function PickerModal({
   show, pickerSearch, setPickerSearch, pickerGrouped,
   showNewExForm, setShowNewExForm, newExName, setNewExName,
-  newExCategory, setNewExCategory, categories,
+  newExCategory, setNewExCategory, newExBodyweight, setNewExBodyweight,
+  categories,
   onClose, onSelect, onCreate,
 }) {
   if (!show) return null;
@@ -1095,6 +1167,12 @@ function PickerModal({
               <select className="wl-select" value={newExCategory} onChange={e => setNewExCategory(e.target.value)}>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
+            </div>
+            <div className="wl-field">
+              <label className="wl-check-label">
+                <input type="checkbox" checked={newExBodyweight} onChange={e => setNewExBodyweight(e.target.checked)} />
+                Bodyweight Exercise
+              </label>
             </div>
             <div className="wl-modal-actions">
               <button className="wl-cancel-btn" onClick={() => setShowNewExForm(false)}>Cancel</button>
@@ -1137,24 +1215,16 @@ function PickerModal({
 }
 
 function AddSetModal({ ctx, workout, w, setW, r, setR, onClose, onAdd,
-  workouts, weightEntries, workoutDate, addBW, setAddBW }) {
+  workouts, workoutDate }) {
   if (!ctx || !workout) return null;
   const ex = workout.exercises[ctx.exIdx];
   const sessions = getExSessions(ex, workouts);
-  const bwValue = getBodyweightForDate(workoutDate, weightEntries);
   return (
     <div className="wl-overlay" onClick={onClose}>
       <div className="wl-set-modal" onClick={e => e.stopPropagation()}>
         <p className="wl-set-modal-title">{ex.name}</p>
         <p className="wl-set-modal-sub">Set {ex.sets.length + 1}</p>
         <SetInputs w={w} setW={setW} r={r} setR={setR} />
-        {bwValue !== null && (
-          <label className="wl-bw-check">
-            <input type="checkbox" checked={addBW} onChange={e => setAddBW(e.target.checked)} />
-            Add Bodyweight
-            <span className="wl-bw-value">(+{bwValue} kg)</span>
-          </label>
-        )}
         {sessions.length > 0 && (
           <div className="wl-modal-history">
             <p className="wl-modal-history-label">Previous Sessions</p>
@@ -1180,24 +1250,16 @@ function AddSetModal({ ctx, workout, w, setW, r, setR, onClose, onAdd,
 }
 
 function EditSetModal({ ctx, workout, w, setW, r, setR, onClose, onSave, onDelete,
-  workouts, weightEntries, workoutDate, editBW, setEditBW }) {
+  workouts, workoutDate }) {
   if (!ctx || !workout) return null;
   const ex = workout.exercises[ctx.exIdx];
   const sessions = getExSessions(ex, workouts);
-  const bwValue = getBodyweightForDate(workoutDate, weightEntries);
   return (
     <div className="wl-overlay" onClick={onClose}>
       <div className="wl-set-modal" onClick={e => e.stopPropagation()}>
         <p className="wl-set-modal-title">{ex.name}</p>
         <p className="wl-set-modal-sub">Set {ctx.setIdx + 1}</p>
         <SetInputs w={w} setW={setW} r={r} setR={setR} />
-        {bwValue !== null && (
-          <label className="wl-bw-check">
-            <input type="checkbox" checked={editBW} onChange={e => setEditBW(e.target.checked)} />
-            Add Bodyweight
-            <span className="wl-bw-value">(+{bwValue} kg)</span>
-          </label>
-        )}
         {sessions.length > 0 && (
           <div className="wl-modal-history">
             <p className="wl-modal-history-label">Previous Sessions</p>

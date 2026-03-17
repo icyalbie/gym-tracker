@@ -5,6 +5,7 @@ import './Exercises.css';
 const STORAGE_KEY     = 'gymtracker_exercises';
 const WORKOUTS_KEY    = 'gymtracker_workouts';
 const CATEGORIES_KEY  = 'gymtracker_categories';
+const WEIGHT_KEY      = 'gymtracker_weight';
 
 const DEFAULT_CATEGORIES = [
   'Vertical Pull',
@@ -59,6 +60,14 @@ function loadCategories() {
   return [...DEFAULT_CATEGORIES];
 }
 
+function getBodyweightForDate(dateKey, weightEntries) {
+  if (!weightEntries || weightEntries.length === 0) return null;
+  const exact = weightEntries.find(e => e.dateKey === dateKey);
+  if (exact) return exact.weight;
+  const sorted = [...weightEntries].sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+  return sorted.length > 0 ? sorted[0].weight : null;
+}
+
 function formatExDate(dateStr) {
   const [year, m, d] = dateStr.split('-');
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -74,6 +83,9 @@ function Exercises({ userId }) {
   const [workouts, setWorkouts] = useState(() =>
     isGuest ? loadJSON(WORKOUTS_KEY, []) : []
   );
+  const [weightEntries, setWeightEntries] = useState(() =>
+    isGuest ? loadJSON(WEIGHT_KEY, []) : []
+  );
   const [categories, setCategories] = useState(loadCategories);
   const [expandedCategories, setExpandedCategories] = useState(new Set());
 
@@ -87,10 +99,10 @@ function Exercises({ userId }) {
           .insert(DEFAULT_EXERCISES.map(e => ({ user_id: userId, name: e.name, category: e.category })))
           .select()
           .then(({ data: seeded }) => {
-            if (seeded) setExercises(seeded.map(e => ({ id: e.id, name: e.name, category: e.category })));
+            if (seeded) setExercises(seeded.map(e => ({ id: e.id, name: e.name, category: e.category, bodyweight: e.bodyweight ?? false })));
           });
       } else {
-        setExercises(data.map(e => ({ id: e.id, name: e.name, category: e.category })));
+        setExercises(data.map(e => ({ id: e.id, name: e.name, category: e.category, bodyweight: e.bodyweight ?? false })));
       }
     });
 
@@ -99,15 +111,24 @@ function Exercises({ userId }) {
         id: wo.id, name: wo.name, date: wo.date, exercises: wo.exercises,
       })));
     });
+
+    supabase.from('weight_entries').select('*').order('date_key').then(({ data }) => {
+      if (data) setWeightEntries(data.map(w => ({
+        id: w.id, dateKey: w.date_key, weight: w.weight,
+      })));
+    });
   }, [userId, isGuest]);
 
   // ── Exercise detail sheet ──────────────────────────────────
-  const [selected, setSelected] = useState(null);
+  const [selected,    setSelected]    = useState(null);
+  const [isRenaming,  setIsRenaming]  = useState(false);
+  const [renameInput, setRenameInput] = useState('');
 
   // ── Add exercise modal ────────────────────────────────────
-  const [showAdd,     setShowAdd]     = useState(false);
-  const [newName,     setNewName]     = useState('');
-  const [newCategory, setNewCategory] = useState(categories[0]);
+  const [showAdd,       setShowAdd]       = useState(false);
+  const [newName,       setNewName]       = useState('');
+  const [newCategory,   setNewCategory]   = useState(categories[0]);
+  const [newBodyweight, setNewBodyweight] = useState(false);
 
   // ── Add category modal ────────────────────────────────────
   const [showAddCategory,  setShowAddCategory]  = useState(false);
@@ -135,6 +156,19 @@ function Exercises({ userId }) {
     });
   }
 
+  async function handleRename() {
+    const trimmed = renameInput.trim();
+    if (!trimmed || !selected) return;
+    if (isGuest) {
+      saveExercises(exercises.map(e => e.id === selected.id ? { ...e, name: trimmed } : e));
+    } else {
+      await supabase.from('exercises').update({ name: trimmed }).eq('id', selected.id);
+      setExercises(prev => prev.map(e => e.id === selected.id ? { ...e, name: trimmed } : e));
+    }
+    setSelected(prev => ({ ...prev, name: trimmed }));
+    setIsRenaming(false);
+  }
+
   async function handleDelete(id) {
     if (isGuest) {
       saveExercises(exercises.filter(e => e.id !== id));
@@ -150,18 +184,19 @@ function Exercises({ userId }) {
     if (!name) return;
 
     if (isGuest) {
-      const exercise = { id: `custom-${Date.now()}`, name, category: newCategory, custom: true };
+      const exercise = { id: `custom-${Date.now()}`, name, category: newCategory, bodyweight: newBodyweight, custom: true };
       saveExercises([...exercises, exercise]);
     } else {
       const { data } = await supabase
         .from('exercises')
-        .insert({ user_id: userId, name, category: newCategory })
+        .insert({ user_id: userId, name, category: newCategory, bodyweight: newBodyweight })
         .select()
         .single();
-      if (data) setExercises(prev => [...prev, { id: data.id, name: data.name, category: data.category }]);
+      if (data) setExercises(prev => [...prev, { id: data.id, name: data.name, category: data.category, bodyweight: data.bodyweight ?? false }]);
     }
     setNewName('');
     setNewCategory(categories[0]);
+    setNewBodyweight(false);
     setShowAdd(false);
   }
 
@@ -229,21 +264,33 @@ function Exercises({ userId }) {
   // ── Stats computation ──────────────────────────────────────
   function getExerciseData(ex) {
     const sessions = [];
+    const allSets = [];
     for (const wo of workouts) {
       const found = wo.exercises?.find(
         e => e.exerciseId === ex.id || e.name === ex.name
       );
       if (found && found.sets?.length > 0) {
-        sessions.push({ date: wo.date, workoutName: wo.name, sets: found.sets });
+        if (ex.bodyweight) {
+          const bw = getBodyweightForDate(wo.date, weightEntries);
+          const effectiveSets = found.sets.map(s => ({
+            weight: bw !== null ? Math.round((bw + s.weight) * 100) / 100 : s.weight,
+            reps: s.reps,
+            bw: bw !== null ? bw : undefined,
+            extra: s.weight,
+          }));
+          sessions.push({ date: wo.date, workoutName: wo.name, sets: effectiveSets });
+          allSets.push(...effectiveSets);
+        } else {
+          sessions.push({ date: wo.date, workoutName: wo.name, sets: found.sets });
+          allSets.push(...found.sets);
+        }
       }
     }
     sessions.sort((a, b) => b.date.localeCompare(a.date));
 
-    const allSets = sessions.flatMap(s => s.sets);
-
     const oneRepSets = allSets.filter(s => s.reps === 1);
     const oneRM = oneRepSets.length > 0
-      ? Math.max(...oneRepSets.map(s => s.weight))
+      ? oneRepSets.reduce((best, s) => s.weight > best.weight ? s : best)
       : null;
 
     const repPRSets = allSets.filter(s => s.reps >= 3);
@@ -344,9 +391,24 @@ function Exercises({ userId }) {
             <div className="ex-sheet-header">
               <div>
                 <p className="ex-sheet-category">{selected.category}</p>
-                <h3 className="ex-sheet-name">{selected.name}</h3>
+                {isRenaming ? (
+                  <input
+                    className="wl-rename-input"
+                    value={renameInput}
+                    autoFocus
+                    onChange={e => setRenameInput(e.target.value)}
+                    onBlur={handleRename}
+                    onKeyDown={e => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setIsRenaming(false); }}
+                  />
+                ) : (
+                  <h3
+                    className="ex-sheet-name wl-cell-name-tap"
+                    onClick={() => { setRenameInput(selected.name); setIsRenaming(true); }}
+                    title="Tap to rename"
+                  >{selected.name}</h3>
+                )}
               </div>
-              <button className="ex-sheet-close" onClick={() => setSelected(null)}>✕</button>
+              <button className="ex-sheet-close" onClick={() => { setSelected(null); setIsRenaming(false); }}>✕</button>
             </div>
 
             <div className="ex-stats-grid">
@@ -354,7 +416,10 @@ function Exercises({ userId }) {
                 <p className="ex-stat-label">1RM</p>
                 {exData.oneRM !== null ? (
                   <>
-                    <p className="ex-stat-value">{exData.oneRM}<span className="ex-stat-unit">kg</span></p>
+                    <p className="ex-stat-value">
+                      {exData.oneRM.bw !== undefined ? `${exData.oneRM.bw}+${exData.oneRM.extra}` : exData.oneRM.weight}
+                      <span className="ex-stat-unit">kg</span>
+                    </p>
                     <p className="ex-stat-hint">Heaviest single rep</p>
                   </>
                 ) : (
@@ -368,7 +433,10 @@ function Exercises({ userId }) {
                 <p className="ex-stat-label">Rep PR</p>
                 {exData.repPR !== null ? (
                   <>
-                    <p className="ex-stat-value">{exData.repPR.weight}<span className="ex-stat-unit">kg</span></p>
+                    <p className="ex-stat-value">
+                      {exData.repPR.bw !== undefined ? `${exData.repPR.bw}+${exData.repPR.extra}` : exData.repPR.weight}
+                      <span className="ex-stat-unit">kg</span>
+                    </p>
                     <p className="ex-stat-hint">× {exData.repPR.reps} reps</p>
                   </>
                 ) : (
@@ -390,7 +458,7 @@ function Exercises({ userId }) {
                       <div className="ex-history-row-sets">
                         {session.sets.map((s, j) => (
                           <span key={j} className="ex-history-chip">
-                            {s.weight}×{s.reps}
+                            {s.bw !== undefined ? `${s.bw}+${s.extra}` : s.weight}×{s.reps}
                           </span>
                         ))}
                       </div>
@@ -438,6 +506,13 @@ function Exercises({ userId }) {
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
+            </div>
+
+            <div className="ex-field">
+              <label className="ex-check-label">
+                <input type="checkbox" checked={newBodyweight} onChange={e => setNewBodyweight(e.target.checked)} />
+                Bodyweight Exercise
+              </label>
             </div>
 
             <div className="ex-modal-actions">

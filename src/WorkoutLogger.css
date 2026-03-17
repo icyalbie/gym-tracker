@@ -24,11 +24,10 @@
 
 .wl-title {
   font-family: var(--font-display);
-  font-size: 44px;
-  font-weight: 900;
+  font-size: 32px;
+  font-weight: 800;
   color: var(--text-primary);
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  letter-spacing: -0.5px;
   line-height: 1;
 }
 
@@ -146,14 +145,17 @@
   display: flex;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
   scrollbar-width: none;
   cursor: grab;
+  gap: 12px;
 }
 
 .wl-carousel::-webkit-scrollbar { display: none; }
 
 .wl-carousel-card {
   flex: 0 0 100%;
+  scroll-snap-align: start;
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
@@ -191,11 +193,10 @@
 
 .wl-carousel-name {
   font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 900;
+  font-size: 20px;
+  font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  letter-spacing: -0.2px;
   line-height: 1;
   margin-bottom: 4px;
 }
@@ -392,16 +393,15 @@
 
 .wl-nav-title {
   font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 900;
+  font-size: 22px;
+  font-weight: 700;
   color: var(--text-primary);
   flex: 1;
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  letter-spacing: -0.3px;
 }
 
 .wl-back-btn {
@@ -998,8 +998,8 @@
   border: none;
   color: var(--text-primary);
   font-family: var(--font-display);
-  font-size: 40px;
-  font-weight: 900;
+  font-size: 28px;
+  font-weight: 700;
   padding: 12px 10px;
   text-align: center;
   outline: none;
@@ -1214,11 +1214,11 @@
 
 .wl-ex-stat-value {
   font-family: var(--font-display);
-  font-size: 36px;
-  font-weight: 900;
+  font-size: 28px;
+  font-weight: 700;
   color: var(--text-primary);
   line-height: 1.1;
-  letter-spacing: 0.5px;
+  letter-spacing: -0.3px;
 }
 
 .wl-ex-stat-unit {
@@ -1287,4 +1287,36 @@
 
 .wl-ex-change-btn:hover {
   background: var(--accent-dim);
+}
+
+/* ── Rename input / tappable name ──────────────────────────── */
+.wl-ex-sheet .wl-rename-input {
+  background: var(--bg-elevated);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  padding: 2px 6px;
+}
+
+.wl-cell-name-tap {
+  cursor: pointer;
+}
+.wl-cell-name-tap:hover {
+  color: var(--accent);
+}
+
+.wl-check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.wl-check-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
 }

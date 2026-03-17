@@ -225,7 +225,7 @@ function Home({ userId, onNavigate }) {
       templateId: template.id,
       name: template.name,
       startedAt: new Date().toISOString(),
-      exercises: template.exercises.map(e => ({ ...e, sets: [] })),
+      exercises: template.exercises.map(e => ({ ...e, bodyweight: e.bodyweight ?? false, sets: [] })),
     };
     localStorage.setItem(ACTIVE_KEY, JSON.stringify(active));
     setShowStartModal(false);

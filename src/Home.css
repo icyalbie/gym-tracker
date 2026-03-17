@@ -21,11 +21,10 @@
 
 .greeting-title {
   font-family: var(--font-display);
-  font-size: 44px;
-  font-weight: 900;
+  font-size: 32px;
+  font-weight: 800;
   color: var(--text-primary);
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  letter-spacing: -0.5px;
   line-height: 1;
 }
 
@@ -56,11 +55,11 @@
 
 .chart-value {
   font-family: var(--font-display);
-  font-size: 48px;
-  font-weight: 900;
+  font-size: 34px;
+  font-weight: 700;
   color: var(--text-primary);
   line-height: 1;
-  letter-spacing: 1px;
+  letter-spacing: -0.3px;
 }
 
 .chart-unit {
@@ -436,11 +435,10 @@
 
 .h-cal-detail-title {
   font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 900;
-  text-transform: uppercase;
+  font-size: 17px;
+  font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: 0.5px;
+  letter-spacing: -0.2px;
   line-height: 1;
 }
 
@@ -486,10 +484,9 @@
 
 .h-modal-title {
   font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
   color: var(--text-primary);
   line-height: 1;
 }

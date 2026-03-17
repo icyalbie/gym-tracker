@@ -566,3 +566,29 @@
   opacity: 0.35;
   cursor: default;
 }
+
+.ex-sheet-name.wl-cell-name-tap:hover {
+  color: var(--accent);
+}
+
+.ex-sheet .wl-rename-input {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  text-transform: none;
+}
+
+.ex-check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.ex-check-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
