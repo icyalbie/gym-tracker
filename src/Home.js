@@ -26,10 +26,8 @@ function catShort(cat) {
   return cat.length > 8 ? cat.slice(0, 7) + '…' : cat.toUpperCase();
 }
 
-function calLabel(name) {
-  const words = name.trim().split(/\s+/);
-  if (words.length === 1) return name;
-  return [...words.slice(0, -1).map(w => w[0].toUpperCase()), words[words.length - 1]].join(' ');
+function initials(name) {
+  return name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase();
 }
 
 function load(key) {
@@ -296,7 +294,7 @@ function Home({ userId, onNavigate }) {
                   return (
                     <div key={dk} className={cls} onClick={handleClick}>
                       <span className="h-cal-date">{day.getDate()}</span>
-                      {wo && <span className="h-cal-wo-name">{calLabel(wo.name)}</span>}
+                      {wo && <span className="h-cal-wo-name">{initials(wo.name)}</span>}
                     </div>
                   );
                 })

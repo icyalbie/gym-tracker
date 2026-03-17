@@ -147,7 +147,7 @@ function computeExStats(ex, workouts) {
 function WorkoutLogger({ userId }) {
   const isGuest = !userId;
 
-  const [view, setView] = useState('list'); // 'list'|'create'|'workout'
+  const [view, setView] = useState(() => load(ACTIVE_KEY, null) ? 'workout' : 'list');
 
   const [exercises,     setExercises]     = useState(() => isGuest ? load(EXERCISES_KEY, DEFAULT_EXERCISES) : []);
   const [templates,     setTemplates]     = useState(() => isGuest ? load(TEMPLATES_KEY, []) : []);
