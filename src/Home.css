@@ -271,6 +271,28 @@
   color: var(--text-hint);
 }
 
+.h-cal-detail-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.h-cal-action-btn {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-default);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition);
+}
+.h-cal-action-btn:hover { border-color: var(--accent); color: var(--accent); }
+.h-cal-action-btn.danger:hover { border-color: #ef4444; color: #ef4444; }
+
 /* ── Workout Calendar ───────────────────────────────────────── */
 .h-cal-box {
   background: var(--bg-surface);

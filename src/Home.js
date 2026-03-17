@@ -26,8 +26,10 @@ function catShort(cat) {
   return cat.length > 8 ? cat.slice(0, 7) + '…' : cat.toUpperCase();
 }
 
-function initials(name) {
-  return name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase();
+function calLabel(name) {
+  const words = name.trim().split(/\s+/);
+  if (words.length === 1) return name;
+  return [...words.slice(0, -1).map(w => w[0].toUpperCase()), words[words.length - 1]].join(' ');
 }
 
 function load(key) {
@@ -134,6 +136,7 @@ function Home({ userId, onNavigate }) {
   const [sbWeightEntries, setSbWeightEntries] = useState([]);
   const [sbCalorieMeals,  setSbCalorieMeals]  = useState([]);
   const [sbWorkouts,      setSbWorkouts]      = useState([]);
+  const [sbTemplates,     setSbTemplates]     = useState([]);
 
   useEffect(() => {
     if (isGuest) return;
@@ -141,7 +144,8 @@ function Home({ userId, onNavigate }) {
       supabase.from('weight_entries').select('*').order('date_key'),
       supabase.from('calorie_meals').select('*'),
       supabase.from('workouts').select('*').order('date', { ascending: false }),
-    ]).then(([wRes, cRes, woRes]) => {
+      supabase.from('templates').select('*'),
+    ]).then(([wRes, cRes, woRes, tmplRes]) => {
       setSbWeightEntries((wRes.data ?? []).map(e => ({
         dateKey: e.date_key, label: e.label, weight: e.weight,
       })));
@@ -151,14 +155,17 @@ function Home({ userId, onNavigate }) {
       setSbWorkouts((woRes.data ?? []).map(wo => ({
         id: wo.id, name: wo.name, date: wo.date, exercises: wo.exercises,
       })));
+      setSbTemplates((tmplRes.data ?? []).map(t => ({
+        id: t.id, name: t.name, exercises: t.exercises ?? [],
+      })));
     });
   }, [userId, isGuest]);
 
   // Guest mode: read fresh from localStorage each render (stays current on tab switches)
-  const weightEntries = isGuest ? load(WEIGHT_KEY)   : sbWeightEntries;
-  const calorieMeals  = isGuest ? load(CALORIES_KEY) : sbCalorieMeals;
-  const workouts      = isGuest ? load(WORKOUTS_KEY) : sbWorkouts;
-  const templates     = load(TEMPLATES_KEY);
+  const weightEntries = isGuest ? load(WEIGHT_KEY)      : sbWeightEntries;
+  const calorieMeals  = isGuest ? load(CALORIES_KEY)    : sbCalorieMeals;
+  const workouts      = isGuest ? load(WORKOUTS_KEY)    : sbWorkouts;
+  const templates     = isGuest ? load(TEMPLATES_KEY)   : sbTemplates;
 
   const todayKey = getTodayKey();
 
@@ -227,6 +234,18 @@ function Home({ userId, onNavigate }) {
     onNavigate('workout');
   }
 
+  async function deleteWorkout(wo) {
+    if (isGuest) {
+      const updated = workouts.filter(w => w.id !== wo.id);
+      localStorage.setItem(WORKOUTS_KEY, JSON.stringify(updated));
+      setSbWorkouts(updated);
+    } else {
+      await supabase.from('workouts').delete().eq('id', wo.id);
+      setSbWorkouts(prev => prev.filter(w => w.id !== wo.id));
+    }
+    setSelectedDateKey(null);
+  }
+
   // ── Workout calendar ──────────────────────────────────────
   const workoutByDate = {};
   for (const wo of workouts) {
@@ -236,6 +255,11 @@ function Home({ userId, onNavigate }) {
 
   return (
     <div className="home">
+
+      {/* Greeting */}
+      <div className="greeting">
+        <p className="greeting-sub">{getTodayLabel()}</p>
+      </div>
 
       {/* Workout calendar */}
       <div className="h-section">
@@ -253,27 +277,31 @@ function Home({ userId, onNavigate }) {
             </div>
           </div>
           <div className="h-cal-scroll">
-        <div className="h-cal-grid">
-          {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => (
-            <div key={d} className="h-cal-dow">{d}</div>
-          ))}
-          {displayWeeks.map((week) =>
-            week.map((day) => {
-              const dk = localDateKey(day);
-              const wo = workoutByDate[dk];
-              const isToday = dk === todayKey;
-              const isFuture = day > new Date() && !isToday;
-              const isSelected = selectedDateKey === dk;
-              const cls = ['h-cal-cell', wo ? 'has-workout' : '', isToday ? 'today' : '', isFuture ? 'future' : '', isSelected ? 'selected' : ''].filter(Boolean).join(' ');
-              return (
-                <div key={dk} className={cls} onClick={isToday ? () => setShowStartModal(true) : wo ? () => setSelectedDateKey(isSelected ? null : dk) : undefined}>
-                  <span className="h-cal-date">{day.getDate()}</span>
-                  {wo && <span className="h-cal-wo-name">{initials(wo.name)}</span>}
-                </div>
-              );
-            })
-          )}
-        </div>
+            <div className="h-cal-grid">
+              {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => (
+                <div key={d} className="h-cal-dow">{d}</div>
+              ))}
+              {displayWeeks.map((week) =>
+                week.map((day) => {
+                  const dk = localDateKey(day);
+                  const wo = workoutByDate[dk];
+                  const isToday = dk === todayKey;
+                  const isFuture = day > new Date() && !isToday;
+                  const isSelected = selectedDateKey === dk;
+                  const cls = ['h-cal-cell', wo ? 'has-workout' : '', isToday ? 'today' : '', isFuture ? 'future' : '', isSelected ? 'selected' : ''].filter(Boolean).join(' ');
+                  const handleClick = (isToday && wo) ? () => setSelectedDateKey(isSelected ? null : dk)
+                    : isToday ? () => setShowStartModal(true)
+                    : wo      ? () => setSelectedDateKey(isSelected ? null : dk)
+                    : undefined;
+                  return (
+                    <div key={dk} className={cls} onClick={handleClick}>
+                      <span className="h-cal-date">{day.getDate()}</span>
+                      {wo && <span className="h-cal-wo-name">{calLabel(wo.name)}</span>}
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>{/* h-cal-scroll */}
         </div>{/* h-cal-box */}
 
@@ -296,15 +324,13 @@ function Home({ userId, onNavigate }) {
                   </div>
                 </div>
               ))}
+              <div className="h-cal-detail-actions">
+                <button className="h-cal-action-btn" onClick={() => onNavigate('workout')}>Edit</button>
+                <button className="h-cal-action-btn danger" onClick={() => deleteWorkout(wo)}>Delete</button>
+              </div>
             </div>
           );
         })()}
-      </div>
-
-      {/* Greeting */}
-      <div className="greeting">
-        <p className="greeting-sub">{getTodayLabel()}</p>
-        {/* <h2 className="greeting-title">{getGreeting()}</h2> */}
       </div>
 
       {/* Weight chart */}
