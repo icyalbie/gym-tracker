@@ -814,7 +814,8 @@
 }
 
 .wl-picker-row {
-  display: block;
+  display: flex;
+  align-items: center;
   width: 100%;
   background: none;
   border: none;
@@ -831,6 +832,92 @@
 .wl-picker-row:hover {
   background: rgba(249, 115, 22, 0.06);
   color: var(--text-primary);
+}
+
+.wl-picker-row-chevron {
+  font-size: 18px;
+  color: var(--text-hint);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ── Picker accordion categories ─────────────────────────── */
+.wl-picker-cat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin: 0 0 8px;
+}
+
+.wl-picker-cat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 14px 16px;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  transition: background var(--transition);
+}
+
+.wl-picker-cat-header:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.wl-picker-cat-chevron {
+  font-size: 20px;
+  color: var(--text-hint);
+  line-height: 1;
+  transition: transform 0.2s ease;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.wl-picker-cat-chevron.open {
+  transform: rotate(90deg);
+}
+
+.wl-picker-cat-name {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.wl-picker-cat-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-radius: var(--radius-pill);
+  padding: 3px 11px;
+  flex-shrink: 0;
+}
+
+.wl-picker-cat-body {
+  border-top: 1px solid var(--border-default);
+}
+
+.wl-picker-cat-body .wl-picker-row {
+  border-bottom: 1px solid var(--border-default);
+}
+
+.wl-picker-cat-body .wl-picker-row:last-child {
+  border-bottom: none;
+}
+
+/* ── Picker error message ─────────────────────────────────── */
+.wl-picker-error {
+  font-size: 13px;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  margin: 0 16px 4px;
 }
 
 .wl-picker-empty {

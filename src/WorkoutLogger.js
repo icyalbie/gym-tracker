@@ -256,6 +256,7 @@ function WorkoutLogger({ userId }) {
   const [pickerSearch,  setPickerSearch]  = useState('');
   const [showNewExForm,    setShowNewExForm]    = useState(false);
   const [newExName,        setNewExName]        = useState('');
+  const [createExError,    setCreateExError]    = useState('');
   const [categories,       setCategories]       = useState(loadCategories);
   const [newExCategory,    setNewExCategory]    = useState(() => loadCategories()[0]);
   const [newExBodyweight,  setNewExBodyweight]  = useState(false);
@@ -480,22 +481,27 @@ function WorkoutLogger({ userId }) {
   async function handleCreateNewExercise() {
     const name = newExName.trim();
     if (!name) return;
+    setCreateExError('');
 
     if (isGuest) {
       const ex = { id: `custom-${Date.now()}`, name, category: newExCategory, bodyweight: newExBodyweight, custom: true };
       saveExercises([...exercises, ex]);
       handlePickerSelect(ex);
+      setNewExName(''); setNewExBodyweight(false); setShowNewExForm(false);
     } else {
-      const { data } = await supabase.from('exercises')
+      const { data, error } = await supabase.from('exercises')
         .insert({ user_id: userId, name, category: newExCategory, bodyweight: newExBodyweight })
         .select().single();
       if (data) {
         const ex = { id: data.id, name: data.name, category: data.category, bodyweight: data.bodyweight ?? false };
         setExercises(prev => [...prev, ex]);
         handlePickerSelect(ex);
+        setNewExName(''); setNewExBodyweight(false); setShowNewExForm(false);
+      } else {
+        console.error('Failed to create exercise:', error);
+        setCreateExError(error?.message || 'Failed to save. Please try again.');
       }
     }
-    setNewExName(''); setNewExBodyweight(false); setShowNewExForm(false);
   }
 
   const filteredExercises = pickerSearch.trim()
@@ -760,6 +766,7 @@ function WorkoutLogger({ userId }) {
     newExCategory, setNewExCategory,
     newExBodyweight, setNewExBodyweight,
     categories,
+    createExError, setCreateExError,
     onClose: () => setShowPicker(false),
     onSelect: handlePickerSelect,
     onCreate: handleCreateNewExercise,
@@ -1141,9 +1148,19 @@ function PickerModal({
   show, pickerSearch, setPickerSearch, pickerGrouped,
   showNewExForm, setShowNewExForm, newExName, setNewExName,
   newExCategory, setNewExCategory, newExBodyweight, setNewExBodyweight,
-  categories,
+  categories, createExError, setCreateExError,
   onClose, onSelect, onCreate,
 }) {
+  const [expandedCats, setExpandedCats] = useState(new Set());
+  function toggleCat(cat) {
+    setExpandedCats(prev => {
+      const next = new Set(prev);
+      next.has(cat) ? next.delete(cat) : next.add(cat);
+      return next;
+    });
+  }
+  const isSearching = pickerSearch.trim().length > 0;
+
   if (!show) return null;
   return (
     <div className="wl-overlay" onClick={onClose}>
@@ -1151,10 +1168,11 @@ function PickerModal({
         {showNewExForm ? (
           <>
             <div className="wl-picker-header">
-              <button className="wl-back-btn" onClick={() => setShowNewExForm(false)}>‹</button>
+              <button className="wl-back-btn" onClick={() => { setShowNewExForm(false); setCreateExError(''); }}>‹</button>
               <p className="wl-picker-title">New Exercise</p>
               <div style={{ width: 32 }} />
             </div>
+            {createExError && <p className="wl-picker-error">{createExError}</p>}
             <div className="wl-field">
               <label className="wl-field-label">Name</label>
               <input
@@ -1175,7 +1193,7 @@ function PickerModal({
               </label>
             </div>
             <div className="wl-modal-actions">
-              <button className="wl-cancel-btn" onClick={() => setShowNewExForm(false)}>Cancel</button>
+              <button className="wl-cancel-btn" onClick={() => { setShowNewExForm(false); setCreateExError(''); }}>Cancel</button>
               <button className="wl-save-btn" onClick={onCreate} disabled={!newExName.trim()}>Add</button>
             </div>
           </>
@@ -1189,22 +1207,48 @@ function PickerModal({
               type="text" className="wl-search-input" placeholder="Search exercises…"
               value={pickerSearch} onChange={e => setPickerSearch(e.target.value)}
             />
-            <button className="wl-new-ex-btn" onClick={() => { setShowNewExForm(true); setNewExName(''); }}>
+            <button className="wl-new-ex-btn" onClick={() => { setShowNewExForm(true); setNewExName(''); setCreateExError(''); }}>
               + Create New Exercise
             </button>
             <div className="wl-picker-list">
-              {pickerGrouped.map(({ category, list }) => (
-                <div key={category}>
-                  <p className="wl-picker-category">{category}</p>
-                  {list.map(ex => (
-                    <button key={ex.id} className="wl-picker-row" onClick={() => onSelect(ex)}>
-                      {ex.name}
-                    </button>
-                  ))}
-                </div>
-              ))}
               {pickerGrouped.length === 0 && (
                 <p className="wl-picker-empty">No exercises match your search.</p>
+              )}
+              {isSearching ? (
+                pickerGrouped.map(({ category, list }) => (
+                  <div key={category}>
+                    <p className="wl-picker-category">{category}</p>
+                    {list.map(ex => (
+                      <button key={ex.id} className="wl-picker-row" onClick={() => onSelect(ex)}>
+                        <span>{ex.name}</span>
+                        <span className="wl-picker-row-chevron">›</span>
+                      </button>
+                    ))}
+                  </div>
+                ))
+              ) : (
+                pickerGrouped.map(({ category, list }) => {
+                  const isOpen = expandedCats.has(category);
+                  return (
+                    <div key={category} className="wl-picker-cat-card">
+                      <button className="wl-picker-cat-header" onClick={() => toggleCat(category)}>
+                        <span className={`wl-picker-cat-chevron${isOpen ? ' open' : ''}`}>›</span>
+                        <span className="wl-picker-cat-name">{category}</span>
+                        <span className="wl-picker-cat-count">{list.length}</span>
+                      </button>
+                      {isOpen && (
+                        <div className="wl-picker-cat-body">
+                          {list.map(ex => (
+                            <button key={ex.id} className="wl-picker-row" onClick={() => onSelect(ex)}>
+                              <span>{ex.name}</span>
+                              <span className="wl-picker-row-chevron">›</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
           </>
