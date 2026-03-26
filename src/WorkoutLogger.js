@@ -188,6 +188,7 @@ function WorkoutLogger({ userId }) {
   // Template editor: rename
   const [renamingExIdx, setRenamingExIdx] = useState(null);
   const [renameVal,     setRenameVal]     = useState('');
+  const [editingCatIdx, setEditingCatIdx] = useState(null);
 
   function handleCarouselScroll() {
     const el = carouselRef.current;
@@ -501,6 +502,15 @@ function WorkoutLogger({ userId }) {
         console.error('Failed to create exercise:', error);
         setCreateExError(error?.message || 'Failed to save. Please try again.');
       }
+    }
+  }
+
+  async function handleExCategoryChange(exerciseId, newCat) {
+    if (isGuest) {
+      saveExercises(exercises.map(e => e.id === exerciseId ? { ...e, category: newCat } : e));
+    } else {
+      await supabase.from('exercises').update({ category: newCat }).eq('id', exerciseId);
+      setExercises(prev => prev.map(e => e.id === exerciseId ? { ...e, category: newCat } : e));
     }
   }
 
@@ -946,7 +956,28 @@ function WorkoutLogger({ userId }) {
               onDrop={() => { reorderDraftEx(exDragSrc.current, i); exDragSrc.current = null; }}
             >
               <span className="wl-drag-handle">⠿</span>
-              <span className="wl-cell-cat">{catShort(ex.category)}</span>
+              {editingCatIdx === i ? (
+                <select
+                  className="wl-cat-select wl-cell-cat"
+                  value={ex.category}
+                  autoFocus
+                  onChange={e => {
+                    const newCat = e.target.value;
+                    setDraftExercises(prev => prev.map((x, j) => j === i ? { ...x, category: newCat } : x));
+                    if (ex.id || ex.exerciseId) handleExCategoryChange(ex.id ?? ex.exerciseId, newCat);
+                    setEditingCatIdx(null);
+                  }}
+                  onBlur={() => setEditingCatIdx(null)}
+                >
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              ) : (
+                <span
+                  className="wl-cell-cat wl-cell-name-tap"
+                  onClick={() => setEditingCatIdx(i)}
+                  title="Tap to change category"
+                >{catShort(ex.category)}</span>
+              )}
               {renamingExIdx === i ? (
                 <input
                   className="wl-rename-input"
@@ -1013,6 +1044,8 @@ function WorkoutLogger({ userId }) {
         workout={activeWorkout}
         workouts={workouts}
         weightEntries={weightEntries}
+        categories={categories}
+        onCategoryChange={handleExCategoryChange}
         onClose={() => setActiveExSheet(null)}
         onRename={(idx, name) => handleRenameExercise(idx, name)}
         onSwap={idx => {
@@ -1032,9 +1065,10 @@ function WorkoutLogger({ userId }) {
 
 // ── Exercise stats sheet (shown when tapping exercise in active workout) ──
 
-function ExerciseStatsSheet({ exIdx, workout, workouts, weightEntries, onClose, onRename, onSwap }) {
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [renameVal,  setRenameVal]  = useState('');
+function ExerciseStatsSheet({ exIdx, workout, workouts, weightEntries, categories, onCategoryChange, onClose, onRename, onSwap }) {
+  const [isRenaming,  setIsRenaming]  = useState(false);
+  const [renameVal,   setRenameVal]   = useState('');
+  const [isCatEditing, setIsCatEditing] = useState(false);
 
   if (exIdx === null || exIdx === undefined || !workout) return null;
   const ex = workout.exercises[exIdx];
@@ -1052,7 +1086,23 @@ function ExerciseStatsSheet({ exIdx, workout, workouts, weightEntries, onClose, 
       <div className="wl-ex-sheet" onClick={e => e.stopPropagation()}>
         <div className="wl-ex-sheet-header">
           <div>
-            <p className="wl-ex-sheet-category">{ex.category}</p>
+            {isCatEditing ? (
+              <select
+                className="wl-cat-select"
+                value={ex.category}
+                autoFocus
+                onChange={e => { onCategoryChange(ex.exerciseId ?? ex.id, e.target.value); setIsCatEditing(false); }}
+                onBlur={() => setIsCatEditing(false)}
+              >
+                {(categories ?? []).map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            ) : (
+              <p
+                className="wl-ex-sheet-category wl-cell-name-tap"
+                onClick={() => setIsCatEditing(true)}
+                title="Tap to change category"
+              >{ex.category}</p>
+            )}
             {isRenaming ? (
               <input
                 className="wl-rename-input"

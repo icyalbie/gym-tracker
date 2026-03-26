@@ -121,8 +121,9 @@ function Exercises({ userId }) {
 
   // ── Exercise detail sheet ──────────────────────────────────
   const [selected,    setSelected]    = useState(null);
-  const [isRenaming,  setIsRenaming]  = useState(false);
-  const [renameInput, setRenameInput] = useState('');
+  const [isRenaming,      setIsRenaming]      = useState(false);
+  const [renameInput,     setRenameInput]     = useState('');
+  const [isCategoryEditing, setIsCategoryEditing] = useState(false);
 
   // ── Add exercise modal ────────────────────────────────────
   const [showAdd,       setShowAdd]       = useState(false);
@@ -154,6 +155,18 @@ function Exercises({ userId }) {
       next.has(cat) ? next.delete(cat) : next.add(cat);
       return next;
     });
+  }
+
+  async function handleCategoryChange(newCat) {
+    if (!selected || newCat === selected.category) { setIsCategoryEditing(false); return; }
+    if (isGuest) {
+      saveExercises(exercises.map(e => e.id === selected.id ? { ...e, category: newCat } : e));
+    } else {
+      await supabase.from('exercises').update({ category: newCat }).eq('id', selected.id);
+      setExercises(prev => prev.map(e => e.id === selected.id ? { ...e, category: newCat } : e));
+    }
+    setSelected(prev => ({ ...prev, category: newCat }));
+    setIsCategoryEditing(false);
   }
 
   async function handleRename() {
@@ -390,7 +403,23 @@ function Exercises({ userId }) {
           <div className="ex-sheet" onClick={e => e.stopPropagation()}>
             <div className="ex-sheet-header">
               <div>
-                <p className="ex-sheet-category">{selected.category}</p>
+                {isCategoryEditing ? (
+                  <select
+                    className="wl-cat-select"
+                    value={selected.category}
+                    autoFocus
+                    onChange={e => handleCategoryChange(e.target.value)}
+                    onBlur={() => setIsCategoryEditing(false)}
+                  >
+                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                ) : (
+                  <p
+                    className="ex-sheet-category wl-cell-name-tap"
+                    onClick={() => setIsCategoryEditing(true)}
+                    title="Tap to change category"
+                  >{selected.category}</p>
+                )}
                 {isRenaming ? (
                   <input
                     className="wl-rename-input"
@@ -408,7 +437,7 @@ function Exercises({ userId }) {
                   >{selected.name}</h3>
                 )}
               </div>
-              <button className="ex-sheet-close" onClick={() => { setSelected(null); setIsRenaming(false); }}>✕</button>
+              <button className="ex-sheet-close" onClick={() => { setSelected(null); setIsRenaming(false); setIsCategoryEditing(false); }}>✕</button>
             </div>
 
             <div className="ex-stats-grid">
